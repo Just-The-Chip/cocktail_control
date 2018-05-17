@@ -1,0 +1,7 @@
+data.db
+
+/__pycache__/*
+
+/images/*
+
+!/images/hola.png

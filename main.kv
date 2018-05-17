@@ -1,0 +1,53 @@
+#:kivy 1.10.0
+#:import kivy kivy
+#:import win kivy.core.window
+
+<MainScreen>:
+    cols: 2
+    Image:
+        id: preview
+        source: './images/hola.png'
+        size: 550, 480
+        allow_stretch: True
+        size_hint: None, None
+
+    GridLayout:
+        cols:1
+        width: 250
+        padding: 0
+        spacing: 0
+        size_hint: None, 1
+
+        Button:
+            id: up_btn
+            size_hint: None, None
+            size: 250, 40
+            text: "SCROLL UP"
+            on_press: root.next_widget(-1)
+
+        ScrollView:
+            size_hint: None, None
+            size: 250, 400
+            pos_hint: {'center_x': .5, 'center_y': .5}
+
+            GridLayout:
+                cols: 1
+                padding: 10
+                spacing: 10
+                height: self.minimum_height
+                size_hint: None, None
+                do_scroll_x: False
+                id: container
+
+        Button:
+            id: down_btn
+            size_hint: None, None
+            size: 250, 40
+            text: "SCROLL DOWN"  
+            on_press: root.next_widget(1)      
+
+<ScrollButton>
+    size_hint: None, None
+    size: 250, 40
+    
+    
