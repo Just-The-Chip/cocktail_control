@@ -5,3 +5,4 @@ data.db
 /images/*
 
 !/images/hola.png
+!/images/Background.jpg

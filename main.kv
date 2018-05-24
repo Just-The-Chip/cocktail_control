@@ -4,12 +4,21 @@
 
 <MainScreen>:
     cols: 2
-    Image:
-        id: preview
-        source: './images/hola.png'
+    AnchorLayout:
+        anchor_x: 'center'
+        anchor_y: 'center'
         size: 550, 480
-        allow_stretch: True
         size_hint: None, None
+        
+        Image:
+            source: './images/Background.jpg'
+
+        Image:
+            id: preview
+            source: './images/hola.png'
+            size: 550, 480
+            allow_stretch: True
+            size_hint: None, None
 
     GridLayout:
         cols:1
