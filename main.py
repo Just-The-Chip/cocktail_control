@@ -15,6 +15,7 @@ if(curpath not in sys.path):
     sys.path.append(curpath)
 
 from repository import DrinkRepository
+from dispenser import Dispenser
 
 class ScrollButton(ToggleButton):
     def __init__(self, **kwargs):
@@ -58,19 +59,25 @@ class MainScreen(GridLayout):
         self.set_current(self.currentPos + increment)    
     
     def select_current(self):
-        currentWidget = self.widgetList[self.currentPos]
-        #todo: scroll to widget
+        currentWidget = self.get_current_drink()
+
         currentWidget.state = 'down'
         self.ids.preview.source = currentWidget.img
+
+        self.ids.scrollview.scroll_to(currentWidget)
 
     def switch_image(self, instance):
         drinkPos = self.widgetList.index(instance)
         self.set_current(drinkPos)   
 
+    def get_current_drink(self):
+        return  self.widgetList[self.currentPos]    
+
 
 class MainApp(App):
 
     repository = DrinkRepository(os.path.join(curpath, 'data.db'))
+    dispenser = Dispenser(0x04)
 
     #drinks = [{'img': './images/shark_cat.jpg', 'name': 'Shark Cat'}, {'img': './images/Batman.jpg', 'name': 'Batman!'}, {'img': './images/squirtle.jpg', 'name': 'Squirtle'}]
 
@@ -79,7 +86,16 @@ class MainApp(App):
         super().__init__()
 
     def build(self):
-        return MainScreen(self.drinks)
+        self.screen = MainScreen(self.drinks)
+        return self.screen
+
+    def dispense_drink(self, drink_id):
+        recipe = self.repository.getDrinkRecipe(drink_id)
+        
+        #TODO: display dispensing message to screen
+        self.dispenser.dispenseDrink(recipe)
+        #remove dispensing message
+        
 
 
 if __name__ == '__main__':
