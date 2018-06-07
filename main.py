@@ -96,7 +96,12 @@ class MainApp(App):
         if modifier == ['shift'] and codepoint.lower() == 'q':
             self.stop() 
 
+        elif modifier == [] and codepoint.lower() == 'enter':
+            self.dispense_drink(self.screen.get_current_drink().drink_id)
+
+
     def dispense_drink(self, drink_id):
+        print(drink_id)
         recipe = self.repository.getDrinkRecipe(drink_id)
         
         #TODO: display dispensing message to screen

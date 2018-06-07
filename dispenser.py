@@ -25,7 +25,9 @@ class Dispenser:
 
     def dispenseDrink(self, recipe):
         for ing in recipe:
-            t = ing["oz"] * self.msPerOz
-            cmd = "pump:%d:%d" % (ing["jar_pos"], t)
-            self.writeBlock(cmd)
-            time.sleep(t / 1000) #I think this will block the rest of the code so a user can't double select.
+            print(ing)
+            if(ing.get("jar_pos") != None and ing.get("oz") != None):
+                t = ing["oz"] * self.msPerOz
+                cmd = "pump:%d:%d" % (ing["jar_pos"], t)
+                self.writeBlock(cmd)
+                time.sleep(t / 1000) #I think this will block the rest of the code so a user can't double select.
