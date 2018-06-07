@@ -11,7 +11,7 @@ class Dispenser:
 
     def __init__(self, address, **kwargs):
         self.address = address
-        self.msPerOz = kwargs.get('mspoz', 1)
+        self.msPerOz = kwargs.get('mspoz', 1000)
         self.bus = smbus.SMBus(1) # for RPI version 1, use "bus = smbus.SMBus(0)"
 
     def writeBlock(self, string):  #This sends the command.  First byte sent is the number of characters in the command.
