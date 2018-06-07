@@ -93,7 +93,7 @@ class MainApp(App):
 
     def check_hotkey(self, window, key, scancode, codepoint, modifier):
         # yay thanks https://stackoverflow.com/a/47922465/2993366
-        if modifier == ['ctrl'] and codepoint == 'q':
+        if modifier == ['shift'] and codepoint.lower() == 'q':
             self.stop() 
 
     def dispense_drink(self, drink_id):
