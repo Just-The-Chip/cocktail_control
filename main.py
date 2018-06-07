@@ -3,6 +3,7 @@ Config.set('graphics', 'width', 800)
 Config.set('graphics', 'height', 480)
 
 from kivy.app import App
+from kivy.core.window import Window
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.textinput import TextInput
@@ -87,7 +88,13 @@ class MainApp(App):
 
     def build(self):
         self.screen = MainScreen(self.drinks)
+        Window.bind(on_keyboard=self.check_hotkey)
         return self.screen
+
+    def check_hotkey(self, window, key, scancode, codepoint, modifier):
+        # yay thanks https://stackoverflow.com/a/47922465/2993366
+        if modifier == ['ctrl'] and codepoint == 'q':
+            self.stop() 
 
     def dispense_drink(self, drink_id):
         recipe = self.repository.getDrinkRecipe(drink_id)
