@@ -8,6 +8,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.textinput import TextInput
 
+from configparser import ConfigParser as AppConfig
+
 import sys
 import os
 
@@ -77,14 +79,36 @@ class MainScreen(GridLayout):
 
 class MainApp(App):
 
-    repository = DrinkRepository(os.path.join(curpath, 'data.db'))
-    dispenser = Dispenser(0x04)
+    config = AppConfig()
+    #repository = DrinkRepository(os.path.join(curpath, 'data.db'))
+    dispenser = Dispenser(0x04, mspoz=2000)
 
     #drinks = [{'img': './images/shark_cat.jpg', 'name': 'Shark Cat'}, {'img': './images/Batman.jpg', 'name': 'Batman!'}, {'img': './images/squirtle.jpg', 'name': 'Squirtle'}]
 
     def __init__(self):
+        self.setup_config()
+        self.setup_repository()
+        self.setup_dispenser()
+
         self.drinks = self.repository.getAvailableDrinks()
         super().__init__()
+
+    def setup_config(self):
+        self.config.read('config.ini')
+        
+    def setup_repository(self):
+        db_path = self.config['Database'].get('Path', 'data.db')
+
+        if not os.path.isabs(db_path):
+            db_path = os.path.join(curpath, db_path)
+
+        self.repository = DrinkRepository(db_path)
+
+    def setup_dispenser(self):
+        addr = int(self.config['Dispenser'].get('Address', '0x00'), 16)
+        mspoz = int(self.config['Dispenser'].get('MsPerOz', '2000'))
+
+        self.dispenser = Dispenser(addr, mspoz=mspoz)
 
     def build(self):
         self.screen = MainScreen(self.drinks)
@@ -107,7 +131,6 @@ class MainApp(App):
         #TODO: display dispensing message to screen
         self.dispenser.dispenseDrink(recipe)
         #remove dispensing message
-        
 
 
 if __name__ == '__main__':

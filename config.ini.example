@@ -1,0 +1,11 @@
+[Database]
+Path = data.db
+
+[Dispenser]
+Address = 0x04
+MsPerOz = 2000
+
+[Hardware]
+RotaryClk = 22
+RotaryDt = 17
+SelectBtn = 27

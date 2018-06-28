@@ -1,8 +1,9 @@
 data.db
-
 /__pycache__/*
-
+/.vscode/*
 /images/*
 
 !/images/hola.png
 !/images/Background.jpg
+
+config.ini
