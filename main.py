@@ -7,11 +7,13 @@ from kivy.core.window import Window
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.textinput import TextInput
+from kivy.clock import mainthread
 
 from configparser import ConfigParser as AppConfig
 
 import sys
 import os
+import time
 
 curpath = os.path.dirname(__file__)
 if(curpath not in sys.path):
@@ -19,6 +21,7 @@ if(curpath not in sys.path):
 
 from repository import DrinkRepository
 from dispenser import Dispenser
+from hardware import EncoderInput
 
 class ScrollButton(ToggleButton):
     def __init__(self, **kwargs):
@@ -56,6 +59,7 @@ class MainScreen(GridLayout):
 
         self.select_current()
 
+    @mainthread
     def next_widget(self, direction):
         increment = -1 if direction < 0 else 1
 
@@ -65,7 +69,8 @@ class MainScreen(GridLayout):
         currentWidget = self.get_current_drink()
 
         currentWidget.state = 'down'
-        self.ids.preview.source = currentWidget.img
+
+        self.ids.preview.source = os.path.abspath(currentWidget.img)
 
         self.ids.scrollview.scroll_to(currentWidget)
 
@@ -74,13 +79,12 @@ class MainScreen(GridLayout):
         self.set_current(drinkPos)   
 
     def get_current_drink(self):
-        return  self.widgetList[self.currentPos]    
+        return  self.widgetList[self.currentPos]
 
 
 class MainApp(App):
 
     config = AppConfig()
-    #repository = DrinkRepository(os.path.join(curpath, 'data.db'))
     dispenser = Dispenser(0x04, mspoz=2000)
 
     #drinks = [{'img': './images/shark_cat.jpg', 'name': 'Shark Cat'}, {'img': './images/Batman.jpg', 'name': 'Batman!'}, {'img': './images/squirtle.jpg', 'name': 'Squirtle'}]
@@ -89,6 +93,7 @@ class MainApp(App):
         self.setup_config()
         self.setup_repository()
         self.setup_dispenser()
+        self.setup_encoder()
 
         self.drinks = self.repository.getAvailableDrinks()
         super().__init__()
@@ -110,10 +115,20 @@ class MainApp(App):
 
         self.dispenser = Dispenser(addr, mspoz=mspoz)
 
+    def setup_encoder(self):
+        clk = int(self.config['Hardware'].get('RotaryClk'))    
+        dt = int(self.config['Hardware'].get('RotaryDt'))
+        btn = int(self.config['Hardware'].get('SelectBtn'))  
+
+        self.encoder = EncoderInput(clk, dt, btn)
+
     def build(self):
         self.screen = MainScreen(self.drinks)
         Window.bind(on_keyboard=self.check_hotkey)
-        return self.screen
+
+        self.encoder.setupEncoderEvents(lambda dir: self.screen.next_widget(dir), self.dispense_current)
+
+        return self.screen 
 
     def check_hotkey(self, window, key, scancode, codepoint, modifier):
         # yay thanks https://stackoverflow.com/a/47922465/2993366
@@ -121,8 +136,10 @@ class MainApp(App):
             self.stop() 
 
         elif modifier == [] and codepoint.lower() == 'enter':
-            self.dispense_drink(self.screen.get_current_drink().drink_id)
+            self.dispense_current()
 
+    def dispense_current(self):
+        self.dispense_drink(self.screen.get_current_drink().drink_id)
 
     def dispense_drink(self, drink_id):
         print(drink_id)
