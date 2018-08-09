@@ -2,6 +2,7 @@ data.db
 /__pycache__/*
 /.vscode/*
 /images/*
+/.ignore/*
 
 !/images/hola.png
 !/images/Background.jpg

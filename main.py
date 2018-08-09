@@ -62,6 +62,7 @@ class MainScreen(GridLayout):
     @mainthread
     def next_widget(self, direction):
         increment = -1 if direction < 0 else 1
+        # print("RECEIVED NEXT WIDGET COMMAND")
 
         self.set_current(self.currentPos + increment)    
     

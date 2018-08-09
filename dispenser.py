@@ -12,7 +12,7 @@ class Dispenser:
     def __init__(self, address, **kwargs):
         self.address = address
         self.msPerOz = kwargs.get('mspoz', 1000)
-        self.bus = smbus.SMBus(1) # for RPI version 1, use "bus = smbus.SMBus(0)"
+        self.bus = smbus.SMBus(1) # for RPI version 1, use "bus = smbus.SMBufs(0)"
 
     def writeBlock(self, string):  #This sends the command.  First byte sent is the number of characters in the command.
         value = list(map(ord, string))
@@ -22,6 +22,14 @@ class Dispenser:
             return -1
         except OSError as err:
             print(err)
+
+    def highlightDrink(self, recipe):
+        jars = [ing.get("jar_pos") for ing in recipe if ing.get("jar_pos") != None]
+        jarString = ','.join(jars)
+
+        cmd = "show:{}".format(jarString)
+        self.writeBlock(cmd)
+                        
 
     def dispenseDrink(self, recipe):
         for ing in recipe:
