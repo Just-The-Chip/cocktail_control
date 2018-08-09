@@ -4,6 +4,7 @@
 # pump:jarpos:ms
 # flush
 
+from RPi import GPIO
 import smbus
 import time
 
@@ -13,6 +14,12 @@ class Dispenser:
         self.address = address
         self.msPerOz = kwargs.get('mspoz', 1000)
         self.bus = smbus.SMBus(1) # for RPI version 1, use "bus = smbus.SMBufs(0)"
+        self.spin = kwargs.get('spin', 10)
+        self.dpin = kwargs.get('dpin', 11)
+
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.spin, GPIO.IN)
+        GPIO.setup(self.dpin, GPIO.IN)
 
     def writeBlock(self, string):  #This sends the command.  First byte sent is the number of characters in the command.
         value = list(map(ord, string))
@@ -30,12 +37,24 @@ class Dispenser:
         cmd = "show:{}".format(jarString)
         self.writeBlock(cmd)
                         
+    def getSizeFactor(self):
+        # get drink sizes
+        if(GPIO.input(self.spin) == GPIO.HIGH):
+            return 1 #single
+
+        if(GPIO.input(self.dpin) == GPIO.HIGH):
+            return 2 #double
+
+        return 0.25 #sample
+
 
     def dispenseDrink(self, recipe):
+        size = self.getSizeFactor()
+
         for ing in recipe:
             print(ing)
             if(ing.get("jar_pos") != None and ing.get("oz") != None):
-                t = ing["oz"] * self.msPerOz
+                t = ing["oz"] * self.msPerOz * size
                 cmd = "pump:%d:%d" % (ing["jar_pos"], t)
                 self.writeBlock(cmd)
                 time.sleep(t / 1000) #I think this will block the rest of the code so a user can't double select.

@@ -114,7 +114,10 @@ class MainApp(App):
         addr = int(self.config['Dispenser'].get('Address', '0x00'), 16)
         mspoz = int(self.config['Dispenser'].get('MsPerOz', '2000'))
 
-        self.dispenser = Dispenser(addr, mspoz=mspoz)
+        single = int(self.config['Hardware'].get('SwitchSingle'))
+        double = int(self.config['Hardware'].get('SwitchDouble'))
+
+        self.dispenser = Dispenser(addr, mspoz=mspoz, spin=single, dpin=double)
 
     def setup_encoder(self):
         clk = int(self.config['Hardware'].get('RotaryClk'))    

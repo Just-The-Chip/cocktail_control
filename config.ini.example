@@ -6,6 +6,8 @@ Address = 0x04
 MsPerOz = 2000
 
 [Hardware]
+SwitchSingle = 10
+SwitchDouble = 11
 RotaryClk = 22
 RotaryDt = 17
 SelectBtn = 27
