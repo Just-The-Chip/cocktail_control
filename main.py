@@ -130,7 +130,7 @@ class MainApp(App):
         self.screen = MainScreen(self.drinks)
         Window.bind(on_keyboard=self.check_hotkey)
 
-        self.encoder.setupEncoderEvents(lambda dir: self.screen.next_widget(dir), self.dispense_current)
+        self.encoder.setupEncoderEvents(lambda dir: self.select_next(dir), self.dispense_current)
 
         return self.screen 
 
@@ -141,6 +141,12 @@ class MainApp(App):
 
         elif modifier == [] and codepoint.lower() == 'enter':
             self.dispense_current()
+
+    def select_next(self, dir):
+        self.screen.next_widget(dir)
+        drink_id = self.screen.get_current_drink().drink_id
+        recipe = self.repository.getDrinkRecipe(drink_id)
+        self.dispenser.highlightDrink(recipe)
 
     def dispense_current(self):
         self.dispense_drink(self.screen.get_current_drink().drink_id)

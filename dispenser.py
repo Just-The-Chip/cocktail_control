@@ -7,6 +7,7 @@
 from RPi import GPIO
 import smbus
 import time
+import subprocess
 
 class Dispenser:
 
@@ -28,10 +29,11 @@ class Dispenser:
             self.bus.write_i2c_block_data(self.address, len(value), value)
             return -1
         except OSError as err:
+            subprocess.call(['i2cdetect', '-y', '1'])
             print(err)
 
     def highlightDrink(self, recipe):
-        jars = [ing.get("jar_pos") for ing in recipe if ing.get("jar_pos") != None]
+        jars = [str(ing.get("jar_pos")) for ing in recipe if ing.get("jar_pos") != None]
         jarString = ','.join(jars)
 
         cmd = "show:{}".format(jarString)
