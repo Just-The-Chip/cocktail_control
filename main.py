@@ -60,11 +60,15 @@ class MainScreen(GridLayout):
         self.select_current()
 
     @mainthread
-    def next_widget(self, direction):
+    def next_widget(self, direction, **kwargs):
         increment = -1 if direction < 0 else 1
         # print("RECEIVED NEXT WIDGET COMMAND")
 
         self.set_current(self.currentPos + increment)    
+
+        callback = kwargs.get("callback")
+        if(callback and hasattr(callback, '__call__')):
+            callback()
     
     def select_current(self):
         currentWidget = self.get_current_drink()
@@ -143,7 +147,9 @@ class MainApp(App):
             self.dispense_current()
 
     def select_next(self, dir):
-        self.screen.next_widget(dir)
+        self.screen.next_widget(dir, callback=lambda: self.highlight_current())
+
+    def highlight_current(self):
         drink_id = self.screen.get_current_drink().drink_id
         recipe = self.repository.getDrinkRecipe(drink_id)
         self.dispenser.highlightDrink(recipe)
