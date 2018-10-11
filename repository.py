@@ -37,7 +37,7 @@ class DrinkRepository:
     def getDrinkRecipe(self, drinkID):
         conn = self._makeConnection()
         c = conn.cursor()
-        query = ("SELECT i.id, i.name, i.jar_pos, di.oz "
+        query = ("SELECT i.id, i.name, i.jar_pos, di.oz, i.flow"
         "FROM ingredients i "
         "INNER JOIN drink_ingredient di ON i.id = di.ingredient_id "
         "WHERE di.drink_id = ?")
@@ -50,7 +50,8 @@ class DrinkRepository:
                 "id": row[0],
                 "name": row[1],
                 "jar_pos": row[2],
-                "oz": row[3]
+                "oz": row[3],
+                "flow": row[4]
             })
         
         conn.close()
@@ -89,6 +90,7 @@ class DrinkRepository:
         return c.rowcount > 0
 
     def updateDrinkRecipe(self, cursor, drinkID, ingredients):
+       
         # perhaps some other time we can go through the list and update existing ingredients but this makes it easier to get the order right.
         cursor.execute("DELETE FROM drink_ingredient WHERE drink_id = ?", (drinkID))
 
@@ -119,3 +121,106 @@ class DrinkRepository:
 
         return conn
 
+class IngredientRepository :
+
+    def __init__(self, dbPath):
+        self.dbPath = dbPath
+
+    def getAll(self, availOnly=False):
+        conn = self._makeConnection()
+        c = conn.cursor()
+        query = ("SELECT id, name, jar_pos, mixer, flow "
+        "FROM ingredients ")
+
+        if availOnly:
+            query += "WHERE (jar_pos IS NOT NULL OR mixer > 0) "
+
+        query += "ORDER BY (jar_pos IS NULL), jar_pos"
+
+        c.execute(query)
+
+        ingredients = []
+        for row in c:
+            ingredients.append({
+                "id": row[0],
+                "name": row[1],
+                "jar_pos": row[2],
+                "mixer": row[3],
+                "flow": row[4]
+            })
+        
+        conn.close()
+
+        return ingredients
+
+    def getIngredient(self, ingID, byJar=False):
+        conn = self._makeConnection()
+        c = conn.cursor()
+        query = ("SELECT id, name, jar_pos, mixer, flow "
+        "FROM ingredients ")
+
+        if str(ingID).isdigit() and byJar:
+            query += "WHERE jar_pos = ?"
+        elif str(ingID).isdigit():
+            query += "WHERE id = ?"
+        else:
+            query += "WHERE name = ?"
+
+        c.execute(query, (ingID,))
+        row = c.fetchone()
+        
+        conn.close()
+
+        if row is None:
+            return None
+
+        return {
+            "id": row[0],
+            "name": row[1],
+            "jar_pos": row[2],
+            "mixer": row[3],
+            "flow": row[4]
+        }
+
+    def updateIngredient(self, ingID, **kwargs):
+        qParams = {}
+
+        if "name" in kwargs and len(kwargs["name"]) > 0 :
+            qParams["name = ?"] = kwargs["name"]
+
+        if "mixer" in kwargs:
+            qParams["mixer = ?"] = 1 if kwargs["mixer"] else 0
+
+        if "flow" in kwargs and str(kwargs["flow"]).isdigit():
+            qParams["flow = ?"] = kwargs["flow"]
+
+        if "jar_pos" in kwargs:
+            jarpos = None if kwargs["jar_pos"] is not None and int(kwargs["jar_pos"]) >= 0 else kwargs["jar_pos"]
+
+            prevJar = self.getIngredient(jarpos, True) if jarpos is not None else None
+            if prevJar is not None:
+                self.updateIngredient(prevJar["id"], jar_pos=None)
+
+            qParams["jar_pos = ?"] = jarpos
+
+        if len(qParams) == 0:
+            return
+
+        query = "UPDATE ingredients SET " + ", ".join(qParams.keys()) + " WHERE id = ?"
+        params = qParams.values()
+        params.append(ingID)
+
+        conn = self._makeConnection()
+        c = conn.cursor()
+        c.execute(query, params)
+
+        conn.commit()
+        conn.close()
+
+        return c.rowcount > 0
+
+    def _makeConnection(self):
+        conn = sqlite3.connect(self.dbPath)
+        conn.execute("PRAGMA foreign_keys = 1")
+
+        return conn    
