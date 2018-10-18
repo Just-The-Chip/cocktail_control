@@ -34,7 +34,7 @@ class MainScreen(GridLayout):
     widgetList = []
     currentPos = 0
 
-    def __init__(self, drinks, **kwargs):        
+    def __init__(self, drinks, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
 
         self.ids.preview.source = './images/hola.png'
@@ -45,7 +45,7 @@ class MainScreen(GridLayout):
             self.widgetList.append(btn)
             container.add_widget(btn)
 
-        self.select_current() 
+        self.select_current()
 
     def set_current(self, drinkPos):
         self.widgetList[self.currentPos].state = 'normal'
@@ -64,12 +64,12 @@ class MainScreen(GridLayout):
         increment = -1 if direction < 0 else 1
         # print("RECEIVED NEXT WIDGET COMMAND")
 
-        self.set_current(self.currentPos + increment)    
+        self.set_current(self.currentPos + increment)
 
         callback = kwargs.get("callback")
         if(callback and hasattr(callback, '__call__')):
             callback()
-    
+
     def select_current(self):
         currentWidget = self.get_current_drink()
 
@@ -81,7 +81,7 @@ class MainScreen(GridLayout):
 
     def switch_image(self, instance):
         drinkPos = self.widgetList.index(instance)
-        self.set_current(drinkPos)   
+        self.set_current(drinkPos)
 
     def get_current_drink(self):
         return  self.widgetList[self.currentPos]
@@ -105,7 +105,7 @@ class MainApp(App):
 
     def setup_config(self):
         self.config.read('config.ini')
-        
+
     def setup_repository(self):
         db_path = self.config['Database'].get('Path', 'data.db')
 
@@ -124,9 +124,9 @@ class MainApp(App):
         self.dispenser = Dispenser(addr, mspoz=mspoz, spin=single, dpin=double)
 
     def setup_encoder(self):
-        clk = int(self.config['Hardware'].get('RotaryClk'))    
+        clk = int(self.config['Hardware'].get('RotaryClk'))
         dt = int(self.config['Hardware'].get('RotaryDt'))
-        btn = int(self.config['Hardware'].get('SelectBtn'))  
+        btn = int(self.config['Hardware'].get('SelectBtn'))
 
         self.encoder = EncoderInput(clk, dt, btn)
 
@@ -136,12 +136,12 @@ class MainApp(App):
 
         self.encoder.setupEncoderEvents(lambda dir: self.select_next(dir), self.dispense_current)
 
-        return self.screen 
+        return self.screen
 
     def check_hotkey(self, window, key, scancode, codepoint, modifier):
         # yay thanks https://stackoverflow.com/a/47922465/2993366
         if modifier == ['shift'] and codepoint.lower() == 'q':
-            self.stop() 
+            self.stop()
 
         elif modifier == [] and codepoint.lower() == 'enter':
             self.dispense_current()
@@ -160,7 +160,7 @@ class MainApp(App):
     def dispense_drink(self, drink_id):
         print(drink_id)
         recipe = self.repository.getDrinkRecipe(drink_id)
-        
+
         #TODO: display dispensing message to screen
         self.dispenser.dispenseDrink(recipe)
         #remove dispensing message

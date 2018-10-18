@@ -1,4 +1,4 @@
-#I2C Pins 
+#I2C Pins
 #GPIO2 -> SDA
 #GPIO3 -> SCL
 # pump:jarpos:ms
@@ -38,7 +38,7 @@ class Dispenser:
 
         cmd = "show:{}".format(jarString)
         self.writeBlock(cmd)
-                        
+
     def getSizeFactor(self):
         # get drink sizes
         if(GPIO.input(self.spin) == GPIO.HIGH):
@@ -54,9 +54,10 @@ class Dispenser:
         size = self.getSizeFactor()
 
         for ing in recipe:
-            print(ing)
-            if(ing.get("jar_pos") != None and ing.get("oz") != None):
-                t = ing["oz"] * self.msPerOz * size
+            if(ing.get("jar_pos") is not None and ing.get("oz") is not None):
+                msPerOz = self.msPerOz if ing.get("flow") is None else ing.get("flow")
+                t = abs(ing["oz"] * msPerOz * size)
                 cmd = "pump:%d:%d" % (ing["jar_pos"], t)
                 self.writeBlock(cmd)
                 time.sleep(t / 1000) #I think this will block the rest of the code so a user can't double select.
+                print("what im done")

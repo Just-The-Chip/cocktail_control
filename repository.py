@@ -31,7 +31,7 @@ class DrinkRepository:
             })
 
         conn.close()
-    
+
         return drinks
 
     def getDrinkRecipe(self, drinkID):
@@ -53,11 +53,11 @@ class DrinkRepository:
                 "oz": row[3],
                 "flow": row[4]
             })
-        
+
         conn.close()
 
         return ingredients
-    
+
     def insertDrink(self, name, image, ingredients):
         conn = self._makeConnection()
         c = conn.cursor()
@@ -90,7 +90,7 @@ class DrinkRepository:
         return c.rowcount > 0
 
     def updateDrinkRecipe(self, cursor, drinkID, ingredients):
-       
+
         # perhaps some other time we can go through the list and update existing ingredients but this makes it easier to get the order right.
         cursor.execute("DELETE FROM drink_ingredient WHERE drink_id = ?", (drinkID))
 
@@ -101,8 +101,8 @@ class DrinkRepository:
             query += "VALUES(?, ?, ?) "
             params.extend([drinkID, ing.get('id'), ing.get('oz')])
 
-        cursor.execute(query, params)    
-    
+        cursor.execute(query, params)
+
     def deleteDrink(self, drinkID):
         conn = self._makeConnection()
         c = conn.cursor()
@@ -148,7 +148,7 @@ class IngredientRepository :
                 "mixer": row[3],
                 "flow": row[4]
             })
-        
+
         conn.close()
 
         return ingredients
@@ -168,7 +168,7 @@ class IngredientRepository :
 
         c.execute(query, (ingID,))
         row = c.fetchone()
-        
+
         conn.close()
 
         if row is None:
@@ -224,4 +224,4 @@ class IngredientRepository :
         conn = sqlite3.connect(self.dbPath)
         conn.execute("PRAGMA foreign_keys = 1")
 
-        return conn    
+        return conn

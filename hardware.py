@@ -35,11 +35,11 @@ class EncoderInput:
         now = time()  #Represents the time this encoder event occoured.
         list = []     #Stores IO samples from encoder dt.
         state = False #state of encoder 'dt' based on average from 'list'
-        
+
         while time() <= now + 0.002: #Get samples over 2mS period of IO 'dt' state; as many as possible
             list = list + [GPIO.input(self.dt)]
 
-        state = int(round(sum(list) / len(list))) #Average the values in list (dt IO state).  Output is 0 or 1. Represents state of 'dt'    
+        state = int(round(sum(list) / len(list))) #Average the values in list (dt IO state).  Output is 0 or 1. Represents state of 'dt'
 
         if state: #If dt state is True, encoder is turning Counter Clockwise, pass -1 to callback
             self.turnCallback(-1)
