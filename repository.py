@@ -192,10 +192,11 @@ class IngredientRepository :
             qParams["mixer = ?"] = 1 if kwargs["mixer"] else 0
 
         if "flow" in kwargs and str(kwargs["flow"]).isdigit():
-            qParams["flow = ?"] = kwargs["flow"]
+            flow = kwargs["flow"] if int(kwargs["flow"]) > 0 else None
+            qParams["flow = ?"] = flow
 
         if "jar_pos" in kwargs:
-            jarpos = None if kwargs["jar_pos"] is not None and int(kwargs["jar_pos"]) >= 0 else kwargs["jar_pos"]
+            jarpos = None if kwargs["jar_pos"] is not None and int(kwargs["jar_pos"]) <= 0 else kwargs["jar_pos"]
 
             prevJar = self.getIngredient(jarpos, True) if jarpos is not None else None
             if prevJar is not None:
@@ -204,10 +205,10 @@ class IngredientRepository :
             qParams["jar_pos = ?"] = jarpos
 
         if len(qParams) == 0:
-            return
+            return False
 
         query = "UPDATE ingredients SET " + ", ".join(qParams.keys()) + " WHERE id = ?"
-        params = qParams.values()
+        params = list(qParams.values())
         params.append(ingID)
 
         conn = self._makeConnection()

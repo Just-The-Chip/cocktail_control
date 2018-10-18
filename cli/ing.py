@@ -24,6 +24,18 @@ def getRepo():
 
     return IngredientRepository(db_path)
 
+# def getDispenser():
+#     config = ConfigParser()
+#     config.read('config.ini')
+
+#     addr = int(config['Dispenser'].get('Address', '0x00'), 16)
+#     mspoz = int(config['Dispenser'].get('MsPerOz', '2000'))
+
+#     single = int(config['Hardware'].get('SwitchSingle'))
+#     double = int(config['Hardware'].get('SwitchDouble'))
+
+#     return Dispenser(addr, mspoz=mspoz, spin=single, dpin=double)    
+
 def echoIngredients(ingredients):
     cols = {
         "jar_pos": len("jar_pos") + 2,
@@ -86,16 +98,56 @@ def describe(jar, ing):
     else:     
         echoIngredients([ingredient])
 
-# @main.command()
-# @click.option('--flow', )
-def update():
-    pass
+@main.command()
+@click.option('--flow', type=(int), help="ms per oz, 0 for default")
+@click.option('--jar', type=(int), help="jar postion, 0 to remove postion")
+@click.option('--mixer', type=(bool), help="denotes if available on the side as a mixer")
+@click.option('--name', type=(str), help="name of ingredient (duh)")
+@click.argument('id', type=(int), required=True)
+@click.pass_context
+def update(ctx, flow, jar, mixer, name, id):
+    """
+    Update an ingrediant by ID
+    """
+    repo = getRepo()
 
-def testIngredient():
-    pass
+    updateArgs = {}
+    if flow is not None:
+        updateArgs["flow"] = flow
 
-def updateJarPrime():
-    pass    
+    if jar is not None:
+        updateArgs["jar_pos"] = jar
+
+    if mixer is not None: 
+        updateArgs["mixer"] = mixer
+
+    if name is not None and name != "":
+        updateArgs["name"] = name
+
+    success = False if len(updateArgs) <= 0 else repo.updateIngredient(id, **updateArgs)
+    
+    if success:
+        ctx.invoke(describe, ing=id)
+    else:
+        click.echo("Unable to update ingredient. Make sure the ID is right.")       
+
+# @click.option('--jar/--id', default=False, help="find by jar or ID")
+# @click.argument('ing', required=True)
+# def test(jar, ing):
+#     """
+#     Dispense 1 oz of the ingredient specified by jar or ID
+#     """
+    
+#     repo = getRepo()
+
+#     ingredient = repo.getIngredient(ing, jar)
+#     if ingredient is None:
+#         click.echo("Not found.")
+#         return
+
+#     if ingredient["jar_pos"] is None:
+#         click.echo(ingredient["name"] + " is not assigned a jar.")
+#         return
 
 if __name__ == "__main__":
     main()
