@@ -25,7 +25,7 @@ class EncoderInput:
         #GPIO.add_event_callback(self.clk, lambda channel: print("RECEIVED NEXT WIDGET COMMAND"))
 
         #event for clicking button
-        GPIO.add_event_detect(self.btn, GPIO.FALLING, callback=self.handleEncoderPress, bouncetime=1000)
+        GPIO.add_event_detect(self.btn, GPIO.RISING, callback=self.handleEncoderPress, bouncetime=1000)
         #GPIO.add_event_callback(self.btn, lambda channel: print("GPIO VALUE: " + GPIO.input(channel)))
 
     def handleEncoderPress(self, channel):
