@@ -14,6 +14,8 @@ class Dispenser:
     def __init__(self, address, **kwargs):
         self.address = address
         self.msPerOz = kwargs.get('mspoz', 1000)
+        self.prime = kwargs.get('prime', {})
+
         self.bus = smbus.SMBus(1) # for RPI version 1, use "bus = smbus.SMBufs(0)"
         self.spin = kwargs.get('spin', 10)
         self.dpin = kwargs.get('dpin', 11)
@@ -57,7 +59,12 @@ class Dispenser:
             if(ing.get("jar_pos") is not None and ing.get("oz") is not None):
                 msPerOz = self.msPerOz if ing.get("flow") is None else ing.get("flow")
                 t = abs(ing["oz"] * msPerOz * size)
+
+                prime = int(self.prime.get(str(ing["jar_pos"]), 0))
+                t += abs(prime)
+
                 cmd = "pump:%d:%d" % (ing["jar_pos"], t)
                 self.writeBlock(cmd)
+
                 time.sleep(t / 1000) #I think this will block the rest of the code so a user can't double select.
                 print("what im done")

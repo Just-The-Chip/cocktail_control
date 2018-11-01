@@ -121,7 +121,9 @@ class MainApp(App):
         single = int(self.config['Hardware'].get('SwitchSingle'))
         double = int(self.config['Hardware'].get('SwitchDouble'))
 
-        self.dispenser = Dispenser(addr, mspoz=mspoz, spin=single, dpin=double)
+        prime = {} if 'Prime' not in self.config else self.config['Prime']
+
+        self.dispenser = Dispenser(addr, mspoz=mspoz, prime=prime, spin=single, dpin=double)
 
     def setup_encoder(self):
         clk = int(self.config['Hardware'].get('RotaryClk'))

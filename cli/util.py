@@ -13,9 +13,16 @@ if(parentpath not in sys.path):
 from repository import IngredientRepository
 from dispenser import Dispenser
 
-def getRepo():
+def configPath():
+    return parentpath + '/config.ini'
+
+def getConfig():
     config = ConfigParser()
-    config.read('../config.ini')
+    config.read(configPath())
+    return config
+
+def getRepo():
+    config = getConfig()
 
     db_path = config['Database'].get('Path', 'data.db')
 
@@ -24,7 +31,7 @@ def getRepo():
 
     return IngredientRepository(db_path)
 
-def getDispenser():
+def getDispenser(**kwargs):
     config = ConfigParser()
     config.read('../config.ini')
 
@@ -34,4 +41,6 @@ def getDispenser():
     single = int(config['Hardware'].get('SwitchSingle'))
     double = int(config['Hardware'].get('SwitchDouble'))
 
-    return Dispenser(addr, mspoz=mspoz, spin=single, dpin=double)
+    prime = kwargs.get('prime', config['Prime'])
+
+    return Dispenser(addr, mspoz=mspoz, prime=prime, spin=single, dpin=double)
