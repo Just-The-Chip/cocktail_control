@@ -55,7 +55,9 @@ class Dispenser:
     def dispenseDrink(self, recipe):
         size = self.getSizeFactor()
 
+        print("Dispensing recipe...")
         for ing in recipe:
+            print(ing)
             if(ing.get("jar_pos") is not None and ing.get("oz") is not None):
                 msPerOz = self.msPerOz if ing.get("flow") is None else ing.get("flow")
                 t = abs(ing["oz"] * msPerOz * size)

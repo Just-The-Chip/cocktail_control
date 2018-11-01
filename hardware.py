@@ -25,11 +25,12 @@ class EncoderInput:
         #GPIO.add_event_callback(self.clk, lambda channel: print("RECEIVED NEXT WIDGET COMMAND"))
 
         #event for clicking button
-        GPIO.add_event_detect(self.btn, GPIO.RISING, callback=self.handleEncoderPress, bouncetime=1000)
-        #GPIO.add_event_callback(self.btn, lambda channel: print("GPIO VALUE: " + GPIO.input(channel)))
+        GPIO.add_event_detect(self.btn, GPIO.FALLING, callback=self.handleEncoderPress, bouncetime=1000)
+        # GPIO.add_event_callback(self.btn, lambda channel: print("HEY STEVE"))
 
     def handleEncoderPress(self, channel):
         self.btnCallback()
+        print("------encoder button callback begin---------")
 
     def handleEncoder(self, channel): # channel is not used, but is required to handle the event.
         now = time()  #Represents the time this encoder event occoured.
@@ -39,6 +40,7 @@ class EncoderInput:
         while time() <= now + 0.002: #Get samples over 2mS period of IO 'dt' state; as many as possible
             list = list + [GPIO.input(self.dt)]
 
+        # print(list)
         state = int(round(sum(list) / len(list))) #Average the values in list (dt IO state).  Output is 0 or 1. Represents state of 'dt'
 
         if state: #If dt state is True, encoder is turning Counter Clockwise, pass -1 to callback

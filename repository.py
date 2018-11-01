@@ -37,7 +37,7 @@ class DrinkRepository:
     def getDrinkRecipe(self, drinkID):
         conn = self._makeConnection()
         c = conn.cursor()
-        query = ("SELECT i.id, i.name, i.jar_pos, di.oz, i.flow"
+        query = ("SELECT i.id, i.name, i.jar_pos, di.oz, i.flow "
         "FROM ingredients i "
         "INNER JOIN drink_ingredient di ON i.id = di.ingredient_id "
         "WHERE di.drink_id = ?")
