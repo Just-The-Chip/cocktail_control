@@ -21,8 +21,8 @@ class Dispenser:
         self.dpin = kwargs.get('dpin', 11)
 
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.spin, GPIO.IN)
-        GPIO.setup(self.dpin, GPIO.IN)
+        GPIO.setup(self.spin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        GPIO.setup(self.dpin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
     def writeBlock(self, string):  #This sends the command.  First byte sent is the number of characters in the command.
         value = list(map(ord, string))
@@ -43,10 +43,10 @@ class Dispenser:
 
     def getSizeFactor(self):
         # get drink sizes
-        if(GPIO.input(self.spin) == GPIO.HIGH):
+        if(GPIO.input(self.spin) == GPIO.LOW):
             return 1 #single
 
-        if(GPIO.input(self.dpin) == GPIO.HIGH):
+        if(GPIO.input(self.dpin) == GPIO.LOW):
             return 2 #double
 
         return 0.25 #sample

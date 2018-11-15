@@ -32,8 +32,7 @@ def getRepo():
     return IngredientRepository(db_path)
 
 def getDispenser(**kwargs):
-    config = ConfigParser()
-    config.read('../config.ini')
+    config = getConfig()
 
     addr = int(config['Dispenser'].get('Address', '0x00'), 16)
     mspoz = int(config['Dispenser'].get('MsPerOz', '2000'))

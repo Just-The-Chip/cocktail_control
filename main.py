@@ -15,7 +15,7 @@ import sys
 import os
 import time
 
-curpath = os.path.dirname(__file__)
+curpath = os.path.abspath(os.path.join(__file__, os.pardir))
 if(curpath not in sys.path):
     sys.path.append(curpath)
 
@@ -25,7 +25,7 @@ from hardware import EncoderInput
 
 class ScrollButton(ToggleButton):
     def __init__(self, **kwargs):
-        self.img = kwargs.pop('img')
+        self.img = curpath + '/images/' + kwargs.pop('img')
         self.drink_id = kwargs.pop('drink_id')
         super(ScrollButton, self).__init__(**kwargs)
 
@@ -104,7 +104,7 @@ class MainApp(App):
         super().__init__()
 
     def setup_config(self):
-        self.config.read('config.ini')
+        self.config.read(curpath + '/config.ini')
 
     def setup_repository(self):
         db_path = self.config['Database'].get('Path', 'data.db')

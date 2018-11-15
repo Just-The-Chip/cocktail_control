@@ -70,7 +70,7 @@ def test(time, jar):
 
     dispenser.dispenseDrink([mockIng])
 
-    click.echo("Test complete for jar #"+ jar)
+    click.echo("Test complete for jar #"+ str(jar))
 
 
 if __name__ == "__main__":

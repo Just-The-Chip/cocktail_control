@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import click
-from configparser import ConfigParser
 
 import sys
 import os
@@ -139,6 +138,11 @@ def test(flow, jar, ing):
     }
 
     dispenser = getDispenser()
+
+    if dispenser.getSizeFactor() != 1:
+        click.echo("Please set the dispense size switch to \"single\"")
+        return
+
     dispenser.dispenseDrink([recipeIng])
 
     click.echo("Test complete for "+ ingredient["name"])
