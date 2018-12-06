@@ -22,7 +22,7 @@ class Dispenser:
 
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.spin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-        GPIO.setup(self.dpin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(self.dpin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     def writeBlock(self, string):  #This sends the command.  First byte sent is the number of characters in the command.
         value = list(map(ord, string))
