@@ -6,15 +6,25 @@ class EncoderInput:
     bounce = 50
     # btnInProgress = False
 
-    def __init__(self, clk, dt, btn):
+    def __init__(self, clk, dt, btn, rled, gled, bled):
         self.clk = clk
         self.dt = dt
         self.btn = btn
+
+        self.rled = rled
+        self.gled = gled
+        self.bled = bled
 
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.clk, GPIO.IN)
         GPIO.setup(self.dt, GPIO.IN)
         GPIO.setup(self.btn, GPIO.IN)
+
+        GPIO.setup(self.rled, GPIO.OUT)
+        GPIO.setup(self.gled, GPIO.OUT)
+        GPIO.setup(self.bled, GPIO.OUT)
+
+        self.setColor(0, 0, 1)
 
     def setupEncoderEvents(self, turnCallback, btnCallback):
         self.turnCallback = turnCallback
@@ -37,12 +47,21 @@ class EncoderInput:
 
         return int(round(sum(list) / len(list)))
 
+    def setColor(self, r, g, b):
+        GPIO.output(self.rled, r)
+        GPIO.output(self.gled, g)
+        GPIO.output(self.bled, b)
+
     def handleEncoderPress(self, channel):
         state = self.sampleChannel(self.btn, 0.010) #sample 10 ms
 
         if state:
             print("------encoder button callback begin---------")
+            self.setColor(1, 0, 0)
             self.btnCallback()
+            self.setColor(0, 1, 0)
+            sleep(2) # wait 2 seconds before accepting more input
+            self.setColor(0, 0, 1)
         else:
             print("----------BUTTON PRESS IGNORED!-------------")
 

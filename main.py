@@ -130,7 +130,11 @@ class MainApp(App):
         dt = int(self.config['Hardware'].get('RotaryDt'))
         btn = int(self.config['Hardware'].get('SelectBtn'))
 
-        self.encoder = EncoderInput(clk, dt, btn)
+        r = int(self.config['Hardware'].get('rotaryRLED'))
+        g = int(self.config['Hardware'].get('rotaryGLED'))
+        b = int(self.config['Hardware'].get('rotaryBLED'))
+
+        self.encoder = EncoderInput(clk, dt, btn, r, g, b)
 
     def build(self):
         self.screen = MainScreen(self.drinks)

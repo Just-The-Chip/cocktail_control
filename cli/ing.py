@@ -139,8 +139,10 @@ def test(flow, jar, ing):
 
     dispenser = getDispenser()
 
-    if dispenser.getSizeFactor() != 1:
+    sizeFactor = dispenser.getSizeFactor()
+    if sizeFactor != 1:
         click.echo("Please set the dispense size switch to \"single\"")
+        click.echo("Current size factor: " + str(sizeFactor))
         return
 
     dispenser.dispenseDrink([recipeIng])

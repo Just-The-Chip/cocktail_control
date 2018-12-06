@@ -12,6 +12,10 @@ RotaryClk = 22
 RotaryDt = 17
 SelectBtn = 27
 
+rotaryRLED = 4
+rotaryGLED = 5
+rotaryBLED = 1
+
 [Prime]
 1 = 1500
 2 = 1500
