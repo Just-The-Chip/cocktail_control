@@ -103,7 +103,9 @@ class EncoderInput:
 
     def rotaryState(self):
         # Grab state of input pins.
-        pinstate = (GPIO.input(self.clk) << 1) | GPIO.input(self.dt)
+        clkState = not GPIO.input(self.clk)
+        dtState = not GPIO.input(self.dt)
+        pinstate = (clkState << 1) | dtState
         # Determine new state from the pins and state table.
         self.state = ttable[self.state & 0xf][pinstate]
         # Return emit bits, ie the generated event.
@@ -113,10 +115,10 @@ class EncoderInput:
         result = self.rotaryState()
 
         if result == DIR_CW:
-            self.turnCallback(1)
+            self.turnCallback(-1)
             # counter++;
             # Serial.println(counter);
         elif result == DIR_CCW:
-            self.turnCallback(-1)
+            self.turnCallback(1)
             # counter--;
             # Serial.println(counter);

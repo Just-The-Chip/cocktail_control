@@ -27,16 +27,9 @@
         spacing: 0
         size_hint: None, 1
 
-        Button:
-            id: up_btn
-            size_hint: None, None
-            size: 250, 40
-            text: "SCROLL UP"
-            on_press: root.next_widget(-1)
-
         ScrollView:
             size_hint: None, None
-            size: 250, 400
+            size: 250, 480
             pos_hint: {'center_x': .5, 'center_y': .5}
             id: scrollview
 
@@ -48,13 +41,6 @@
                 size_hint: None, None
                 do_scroll_x: False
                 id: container
-
-        Button:
-            id: down_btn
-            size_hint: None, None
-            size: 250, 40
-            text: "SCROLL DOWN"
-            on_press: root.next_widget(1)
 
 <ScrollButton>
     size_hint: None, None
