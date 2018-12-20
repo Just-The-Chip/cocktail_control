@@ -1,9 +1,45 @@
 from RPi import GPIO
 from time import sleep, time
 
+# State table code adapted from https://github.com/buxtronix/arduino/tree/master/libraries/Rotary
+R_START = 0x0
+R_CW_FINAL = 0x1
+R_CW_BEGIN = 0x2
+R_CW_NEXT = 0x3
+R_CCW_BEGIN = 0x4
+R_CCW_FINAL = 0x5
+R_CCW_NEXT = 0x6
+
+# Values returned by 'process'
+# No complete step yet.
+DIR_NONE = 0x0
+# Clockwise step.
+DIR_CW = 0x10
+# Anti-clockwise step.
+DIR_CCW = 0x20
+
+ttable = [
+  # R_START
+  [R_START,    R_CW_BEGIN,  R_CCW_BEGIN, R_START],
+  # R_CW_FINAL
+  [R_CW_NEXT,  R_START,     R_CW_FINAL,  R_START | DIR_CW],
+  # R_CW_BEGIN
+  [R_CW_NEXT,  R_CW_BEGIN,  R_START,     R_START],
+  # R_CW_NEXT
+  [R_CW_NEXT,  R_CW_BEGIN,  R_CW_FINAL,  R_START],
+  # R_CCW_BEGIN
+  [R_CCW_NEXT, R_START,     R_CCW_BEGIN, R_START],
+  # R_CCW_FINAL
+  [R_CCW_NEXT, R_CCW_FINAL, R_START,     R_START | DIR_CCW],
+  # R_CCW_NEXT
+  [R_CCW_NEXT, R_CCW_FINAL, R_CCW_BEGIN, R_START],
+]
+
 class EncoderInput:
 
-    bounce = 50
+    bounce = 2
+    dtDetect = False
+    state = R_START
     # btnInProgress = False
 
     def __init__(self, clk, dt, btn, rled, gled, bled):
@@ -31,8 +67,8 @@ class EncoderInput:
         self.btnCallback = btnCallback
 
         #event for turning dial
-        GPIO.add_event_detect(self.clk, GPIO.FALLING, callback=self.handleEncoder, bouncetime=self.bounce)
-        #GPIO.add_event_callback(self.clk, lambda channel: print("RECEIVED NEXT WIDGET COMMAND"))
+        GPIO.add_event_detect(self.clk, GPIO.BOTH, callback=self.handleEncoder, bouncetime=self.bounce)
+        GPIO.add_event_detect(self.dt, GPIO.BOTH, callback=self.handleEncoder)
 
         #event for clicking button
         GPIO.add_event_detect(self.btn, GPIO.RISING, callback=self.handleEncoderPress, bouncetime=1000)
@@ -65,10 +101,22 @@ class EncoderInput:
         else:
             print("----------BUTTON PRESS IGNORED!-------------")
 
-    def handleEncoder(self, channel): # channel is not used, but is required to handle the event.
-        state = self.sampleChannel(self.dt, 0.002)
+    def rotaryState(self):
+        # Grab state of input pins.
+        pinstate = (GPIO.input(self.clk) << 1) | GPIO.input(self.dt)
+        # Determine new state from the pins and state table.
+        self.state = ttable[self.state & 0xf][pinstate]
+        # Return emit bits, ie the generated event.
+        return self.state & 0x30
 
-        if state: #If dt state is True, encoder is turning Counter Clockwise, pass -1 to callback
-            self.turnCallback(-1)
-        else:     #else, encoder is turning Clockwise, pass 1 to callback
+    def handleEncoder(self, channel): # channel is not used, but is required to handle the event.
+        result = self.rotaryState()
+
+        if result == DIR_CW:
             self.turnCallback(1)
+            # counter++;
+            # Serial.println(counter);
+        elif result == DIR_CCW:
+            self.turnCallback(-1)
+            # counter--;
+            # Serial.println(counter);
