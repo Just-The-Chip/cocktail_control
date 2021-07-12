@@ -13,8 +13,6 @@ class Dispenser:
 
     def __init__(self, address, **kwargs):
         self.address = address
-        self.msPerOz = kwargs.get('mspoz', 1000)
-        self.prime = kwargs.get('prime', {})
 
         self.bus = smbus.SMBus(1) # for RPI version 1, use "bus = smbus.SMBufs(0)"
         self.spin = kwargs.get('spin', 10)
@@ -54,13 +52,14 @@ class Dispenser:
 
     def dispenseDrink(self, recipe):
         size = self.getSizeFactor()
+        milligramsPerOz = 283495
 
         print("Dispensing recipe...")
         for ing in recipe:
             print(ing)
             if(ing.get("jar_pos") is not None and ing.get("oz") is not None):
                 msPerOz = self.msPerOz if ing.get("flow") is None else ing.get("flow")
-                t = abs(ing["oz"] * msPerOz * size)
+                t = abs(ing["oz"] * milligramsPerOz * size)
 
                 prime = int(self.prime.get(str(ing["jar_pos"]), 0))
                 t += abs(prime)

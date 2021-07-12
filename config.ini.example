@@ -3,7 +3,6 @@ Path = data.db
 
 [Dispenser]
 Address = 0x04
-MsPerOz = 2000
 
 [Hardware]
 SwitchSingle = 10
@@ -15,26 +14,3 @@ SelectBtn = 27
 rotaryRLED = 4
 rotaryGLED = 5
 rotaryBLED = 1
-
-[Prime]
-1 = 1500
-2 = 1500
-3 = 1500
-4 = 1500
-5 = 1500
-6 = 1500
-7 = 1500
-8 = 1500
-9 = 1500
-10 = 1500
-11 = 1500
-12 = 1500
-13 = 1500
-14 = 1500
-15 = 1500
-16 = 1500
-17 = 1500
-18 = 1500
-19 = 1500
-20 = 1500
-21 = 1500

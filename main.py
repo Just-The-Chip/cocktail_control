@@ -90,7 +90,7 @@ class MainScreen(GridLayout):
 class MainApp(App):
 
     config = AppConfig()
-    dispenser = Dispenser(0x04, mspoz=2000)
+    dispenser = Dispenser(0x04)
 
     #drinks = [{'img': './images/shark_cat.jpg', 'name': 'Shark Cat'}, {'img': './images/Batman.jpg', 'name': 'Batman!'}, {'img': './images/squirtle.jpg', 'name': 'Squirtle'}]
 
@@ -116,14 +116,11 @@ class MainApp(App):
 
     def setup_dispenser(self):
         addr = int(self.config['Dispenser'].get('Address', '0x00'), 16)
-        mspoz = int(self.config['Dispenser'].get('MsPerOz', '2000'))
 
         single = int(self.config['Hardware'].get('SwitchSingle'))
         double = int(self.config['Hardware'].get('SwitchDouble'))
 
-        prime = {} if 'Prime' not in self.config else self.config['Prime']
-
-        self.dispenser = Dispenser(addr, mspoz=mspoz, prime=prime, spin=single, dpin=double)
+        self.dispenser = Dispenser(addr, spin=single, dpin=double)
 
     def setup_encoder(self):
         clk = int(self.config['Hardware'].get('RotaryClk'))
