@@ -14,8 +14,9 @@ class Dispenser:
 
     def __init__(self, address, **kwargs):
         self.address = address
+
         # self.msPerOz = kwargs.get('mspoz', 1000)
-        self.prime = kwargs.get('prime', {})
+        # self.prime = kwargs.get('prime', {})
 
         self.bus = smbus.SMBus(1) # for RPI version 1, use "bus = smbus.SMBufs(0)"
         self.spin = kwargs.get('spin', 10)
