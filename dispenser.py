@@ -82,7 +82,7 @@ class Dispenser:
                 mg = abs(ing["oz"] * mgPerOz * size)
 
                 # next comands simply send jar position and number of mg
-                cmd = self.ingredientCmd(ing.get("jar_pos"), mg)
+                cmd = self.ingredientCmd(ing.get("jar_pos"), round(mg))
                 self.writeBlock(cmd)
 
                 # time.sleep(t / 1000) #I think this will block the rest of the code so a user can't double select.
