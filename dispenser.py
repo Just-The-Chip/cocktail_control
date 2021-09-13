@@ -4,7 +4,6 @@
 # pump:jarpos:ms
 # flush
 
-from _typeshed import WriteableBuffer
 from RPi import GPIO
 import smbus
 import time
@@ -32,7 +31,12 @@ class Dispenser:
     def writeBlock(self, byteCmd):  #This sends the command.  First byte sent is the number of characters in the command.
 
         crc = self.calcCRC(byteCmd)
+        print("CRC: ")
+        print(crc)
         value = list(byteCmd + crc.to_bytes(2, 'big'))
+
+        print("sending command: ")
+        print(value)
 
         maxResends = 5
         resends = 0
@@ -104,12 +108,15 @@ class Dispenser:
         mgPerOz = 28349.5
         size = self.getSizeFactor()
 
+        print(recipe)
+
         # start cmd sends number of ingredients
-        self.writeBlock(self.startCmd(len*recipe.get("ing")))
+        self.writeBlock(self.startCmd(len(recipe)))
 
         print("Dispensing recipe...")
         for ing in recipe:
             print(ing)
+            time.sleep(5)
             if(ing.get("jar_pos") is not None and ing.get("oz") is not None):
 
                 mg = abs(ing["oz"] * mgPerOz * size)
