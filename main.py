@@ -155,7 +155,7 @@ class MainApp(App):
     def highlight_current(self):
         drink_id = self.screen.get_current_drink().drink_id
         recipe = self.repository.getDrinkRecipe(drink_id)
-        self.dispenser.highlightDrink(recipe)
+        # self.dispenser.highlightDrink(recipe)
 
     def dispense_current(self):
         self.dispense_drink(self.screen.get_current_drink().drink_id)

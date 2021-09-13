@@ -4,12 +4,15 @@
 # pump:jarpos:ms
 # flush
 
+from _typeshed import WriteableBuffer
 from RPi import GPIO
 import smbus
 import time
 import subprocess
 import crc16
 
+class ReadTimeoutError(Exception): 
+    pass
 class Dispenser:
 
     def __init__(self, address, **kwargs):
@@ -31,12 +34,42 @@ class Dispenser:
         crc = self.calcCRC(byteCmd)
         value = list(byteCmd + crc.to_bytes(2, 'big'))
 
+        maxResends = 5
+        resends = 0
+        writeSuccess = False
         try:
-            self.bus.write_i2c_block_data(self.address, len(value), value)
-            return -1
+            while not writeSuccess and resends < maxResends:
+                self.bus.write_i2c_block_data(self.address, len(value), value)
+                writeSuccess = self.sendAcknowledged()
+                resends += 1
+
+            return writeSuccess
+        except ReadTimeoutError as err:
+            print(err)
         except OSError as err:
             subprocess.call(['i2cdetect', '-y', '1'])
             print(err)
+
+        return False
+
+    def sendAcknowledged(self):
+        return True
+
+        maxRetries = 50
+        retryCount = 0
+        responseVal = 0
+
+        while retryCount < maxRetries:
+            responseVal = self.bus.read_byte_data(self.address, 0)
+            if responseVal == 6: # ASCII for ACK
+                return True
+            elif responseVal == 21: # ASCII for NAK
+                return False
+
+            retryCount += 1
+            time.sleep(0.1)
+
+        raise ReadTimeoutError
 
     def startCmd(self, numIngredients):
         return b'p' + numIngredients.to_bytes(1, 'big')
@@ -84,6 +117,8 @@ class Dispenser:
                 # next comands simply send jar position and number of mg
                 cmd = self.ingredientCmd(ing.get("jar_pos"), round(mg))
                 self.writeBlock(cmd)
+
+                # todo: accept ack or handle nack
 
                 # time.sleep(t / 1000) #I think this will block the rest of the code so a user can't double select.
                 print("what im done")
