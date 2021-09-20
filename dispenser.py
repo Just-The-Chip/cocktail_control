@@ -109,6 +109,7 @@ class Dispenser:
         size = self.getSizeFactor()
 
         print(recipe)
+        print("size: " + str(size))
 
         # start cmd sends number of ingredients
         self.writeBlock(self.startCmd(len(recipe)))
@@ -120,6 +121,8 @@ class Dispenser:
             if(ing.get("jar_pos") is not None and ing.get("oz") is not None):
 
                 mg = abs(ing["oz"] * mgPerOz * size)
+
+                print("mg: " + str(round(mg)))
 
                 # next comands simply send jar position and number of mg
                 cmd = self.ingredientCmd(ing.get("jar_pos"), round(mg))
