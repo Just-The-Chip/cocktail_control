@@ -42,8 +42,11 @@ class Dispenser:
         resends = 0
         writeSuccess = False
         try:
+            print("attempting write...")
             while not writeSuccess and resends < maxResends:
+                print("resend #" + str(resends))
                 self.bus.write_i2c_block_data(self.address, len(value), value)
+                time.sleep(5)
                 writeSuccess = self.sendAcknowledged()
                 resends += 1
 
@@ -51,29 +54,39 @@ class Dispenser:
         except ReadTimeoutError as err:
             print(err)
         except OSError as err:
+            print("OS ERROR oh no")
             subprocess.call(['i2cdetect', '-y', '1'])
             print(err)
 
         return False
 
     def sendAcknowledged(self):
-        return True
+        # return True
 
         maxRetries = 50
         retryCount = 0
         responseVal = 0
 
-        while retryCount < maxRetries:
-            responseVal = self.bus.read_byte_data(self.address, 0)
-            if responseVal == 6: # ASCII for ACK
-                return True
-            elif responseVal == 21: # ASCII for NAK
-                return False
+        print("=(^. .^)= BEGINNING SEND ACKNOLEGEMENT")
 
-            retryCount += 1
-            time.sleep(0.1)
+        print("lol jk, just mocking the return...")
+        return True
 
-        raise ReadTimeoutError
+        # while retryCount < maxRetries:
+        #     print("try #" + str(retryCount))
+        #     responseVal = self.bus.read_i2c_block_data(self.address, 21, 1)
+        #     if responseVal[0] == 6: # ASCII for ACK
+        #         print("ACK RECIEVED")
+        #         return True
+        #     elif responseVal[0] == 21: # ASCII for NAK
+        #         print("NACK RECIEVED")
+        #         return False
+
+        #     print("Didn't get anything, retrying.")
+        #     retryCount += 1
+        #     time.sleep(0.1)
+
+        # raise ReadTimeoutError
 
     def startCmd(self, numIngredients):
         return b'p' + numIngredients.to_bytes(1, 'big')
