@@ -38,6 +38,9 @@ class Dispenser:
         print("sending command: ")
         print(value)
 
+        hexval = map(hex, value)
+        print(list(hexval))
+
         maxResends = 5
         resends = 0
         writeSuccess = False
@@ -61,32 +64,30 @@ class Dispenser:
         return False
 
     def sendAcknowledged(self):
-        # return True
-
         maxRetries = 50
         retryCount = 0
         responseVal = 0
 
         print("=(^. .^)= BEGINNING SEND ACKNOLEGEMENT")
 
-        print("lol jk, just mocking the return...")
-        return True
+        # print("lol jk, just mocking the return...")
+        # return True
 
-        # while retryCount < maxRetries:
-        #     print("try #" + str(retryCount))
-        #     responseVal = self.bus.read_i2c_block_data(self.address, 21, 1)
-        #     if responseVal[0] == 6: # ASCII for ACK
-        #         print("ACK RECIEVED")
-        #         return True
-        #     elif responseVal[0] == 21: # ASCII for NAK
-        #         print("NACK RECIEVED")
-        #         return False
+        while retryCount < maxRetries:
+            print("try #" + str(retryCount))
+            responseVal = self.bus.read_i2c_block_data(self.address, 21, 1)
+            if responseVal[0] == 6: # ASCII for ACK
+                print("ACK RECIEVED")
+                return True
+            elif responseVal[0] == 21: # ASCII for NAK
+                print("NACK RECIEVED")
+                return False
 
-        #     print("Didn't get anything, retrying.")
-        #     retryCount += 1
-        #     time.sleep(0.1)
+            print("Didn't get anything, retrying.")
+            retryCount += 1
+            time.sleep(0.1)
 
-        # raise ReadTimeoutError
+        raise ReadTimeoutError
 
     def startCmd(self, numIngredients):
         return b'p' + numIngredients.to_bytes(1, 'big')
