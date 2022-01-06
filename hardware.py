@@ -16,6 +16,8 @@ class EncoderInput:
     lastSampleTime = time()                                     #Last time encoder channels were sampled.  Used for sample timing.
     stateTime = time()                                          #Contains the last time the state was changed.
 
+    inputEnabled = True                                          #If false encoder input will be ignored until it's set to true again.
+
     #Counter UI visual variables: (for troubleshooting only)
     #counterString = ""                                         #Serves as a visual representation of rotary input.
 
@@ -65,21 +67,32 @@ class EncoderInput:
         GPIO.output(self.gled, g)
         GPIO.output(self.bled, b)
 
+    def disableInput(self):
+        self.setColor(1, 0, 0)
+        self.inputEnabled = False
+
+    def enableInput(self):
+        self.setColor(0, 1, 0)
+        sleep(1) # flash green for 1 second
+        self.setColor(0, 0, 1)
+        self.inputEnabled = True
+
     def handleEncoderPress(self, channel):
         state = self.sampleChannel(self.btn, 0.010) #sample 10 ms
 
         if state:
             #print("------encoder button callback begin---------")
-            self.setColor(1, 0, 0)
+            # self.disableInput()
             self.btnCallback()
-            self.setColor(0, 1, 0)
-            sleep(2) # wait 2 seconds before accepting more input
-            self.setColor(0, 0, 1)
+            # self.enableInput() #TODO: remove
         else:
             pass
             #print("----------BUTTON PRESS IGNORED!-------------")
 
     def handleEncoder(self, channel): # channel is not used, but is required to handle the event.
+
+        if self.inputEnabled is False:
+            return
 
         #Encoder state and timing variables:
         stateB = True                   #State of encoder channel B (filtered). Logic is made to match that of the encoder.

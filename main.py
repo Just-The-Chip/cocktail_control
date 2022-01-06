@@ -149,6 +149,14 @@ class MainApp(App):
         elif modifier == [] and codepoint.lower() == 'enter':
             self.dispense_current()
 
+    def allow_selection(self):
+        self.encoder.enableInput()
+        # remove dispensing popup
+
+    def prevent_selection(self):
+        self.encoder.disableInput()
+        # show dispensing popup
+
     def select_next(self, dir):
         self.screen.next_widget(dir, callback=lambda: self.highlight_current())
 
@@ -164,10 +172,8 @@ class MainApp(App):
         print(drink_id)
         recipe = self.repository.getDrinkRecipe(drink_id)
 
-        #TODO: display dispensing message to screen
-        self.dispenser.dispenseDrink(recipe)
-        #remove dispensing message
-
+        self.prevent_selection()
+        self.dispenser.dispenseDrink(recipe, self.allow_selection)
 
 if __name__ == '__main__':
     MainApp().run()

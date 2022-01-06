@@ -49,7 +49,8 @@ class Dispenser:
             while not writeSuccess and resends < maxResends:
                 print("resend #" + str(resends))
                 self.bus.write_i2c_block_data(self.address, len(value), value)
-                time.sleep(5)
+                time.sleep(0.035)
+                # print("NO SLEEP!")
                 writeSuccess = self.sendAcknowledged()
                 resends += 1
 
@@ -68,18 +69,20 @@ class Dispenser:
         retryCount = 0
         responseVal = 0
 
-        print("=(^. .^)= BEGINNING SEND ACKNOLEGEMENT")
+        print("=(^. .^)= BEGINNING SEND ACKNOLEGEMENT!!")
 
         # print("lol jk, just mocking the return...")
         # return True
 
         while retryCount < maxRetries:
             print("try #" + str(retryCount))
-            responseVal = self.bus.read_i2c_block_data(self.address, 21, 1)
-            if responseVal[0] == 6: # ASCII for ACK
+            # responseVal = self.bus.read_i2c_block_data(self.address, 21, 1)
+            responseVal = self.bus.read_byte(self.address)
+            print(responseVal)
+            if responseVal == 6: # ASCII for ACK
                 print("ACK RECIEVED")
                 return True
-            elif responseVal[0] == 21: # ASCII for NAK
+            elif responseVal == 21: # ASCII for NAK
                 print("NACK RECIEVED")
                 return False
 
@@ -118,7 +121,7 @@ class Dispenser:
         return 0.25 #sample
 
 
-    def dispenseDrink(self, recipe):
+    def dispenseDrink(self, recipe, doneCallback):
         mgPerOz = 28349.5
         size = self.getSizeFactor()
 
@@ -131,7 +134,7 @@ class Dispenser:
         print("Dispensing recipe...")
         for ing in recipe:
             print(ing)
-            time.sleep(5)
+            # time.sleep(5) # time is no longer required because arduino says when read is done
             if(ing.get("jar_pos") is not None and ing.get("oz") is not None):
 
                 mg = abs(ing["oz"] * mgPerOz * size)
@@ -146,3 +149,5 @@ class Dispenser:
 
                 # time.sleep(t / 1000) #I think this will block the rest of the code so a user can't double select.
                 print("what im done")
+        print("doing done callback.")
+        doneCallback()
