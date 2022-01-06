@@ -9,9 +9,18 @@ import smbus
 import time
 import subprocess
 import crc16
+from enum import IntEnum
 
 class ReadTimeoutError(Exception): 
     pass
+
+class DispenserStatus(IntEnum):
+    ACK = 6
+    NACK = 21
+    READING = 5
+    DISPENSING = 7
+    READY = 3
+
 class Dispenser:
 
     def __init__(self, address, **kwargs):
@@ -65,26 +74,39 @@ class Dispenser:
         return False
 
     def sendAcknowledged(self):
-        maxRetries = 50
+        maxRetries = 10
         retryCount = 0
-        responseVal = 0
+        dispenserStatus = DispenserStatus.READING
 
         print("=(^. .^)= BEGINNING SEND ACKNOLEGEMENT!!")
 
         # print("lol jk, just mocking the return...")
         # return True
 
+        while retryCount < maxRetries and dispenserStatus == DispenserStatus.READING:
+            dispenserStatus = self.getDispenserStatus()
+
+        if dispenserStatus == DispenserStatus.READING:
+            print("status stuck at read (womp womp)")
+            raise ReadTimeoutError
+
+        return dispenserStatus != DispenserStatus.NACK
+            
+    def getDispenserStatus(self):
+        maxRetries = 50
+        retryCount = 0
+        responseVal = 0
+
+        print("BEGINNING STATUS CHECK")
+
         while retryCount < maxRetries:
             print("try #" + str(retryCount))
-            # responseVal = self.bus.read_i2c_block_data(self.address, 21, 1)
+
             responseVal = self.bus.read_byte(self.address)
             print(responseVal)
-            if responseVal == 6: # ASCII for ACK
-                print("ACK RECIEVED")
-                return True
-            elif responseVal == 21: # ASCII for NAK
-                print("NACK RECIEVED")
-                return False
+
+            if responseVal in list(DispenserStatus):
+                return responseVal
 
             print("Didn't get anything, retrying.")
             retryCount += 1
@@ -134,7 +156,7 @@ class Dispenser:
         print("Dispensing recipe...")
         for ing in recipe:
             print(ing)
-            # time.sleep(5) # time is no longer required because arduino says when read is done
+
             if(ing.get("jar_pos") is not None and ing.get("oz") is not None):
 
                 mg = abs(ing["oz"] * mgPerOz * size)
@@ -145,9 +167,12 @@ class Dispenser:
                 cmd = self.ingredientCmd(ing.get("jar_pos"), round(mg))
                 self.writeBlock(cmd)
 
-                # todo: accept ack or handle nack
+                print("ingredient sent---")
+        
+        print("checking for ready status.")
+        while self.getDispenserStatus() != DispenserStatus.READY:
+            time.sleep(1)
+            # do we need to have a timeout?
 
-                # time.sleep(t / 1000) #I think this will block the rest of the code so a user can't double select.
-                print("what im done")
         print("doing done callback.")
         doneCallback()
