@@ -74,7 +74,7 @@ class Dispenser:
         return False
 
     def sendAcknowledged(self):
-        maxRetries = 10
+        maxRetries = 25
         retryCount = 0
         dispenserStatus = DispenserStatus.READING
 
@@ -84,12 +84,15 @@ class Dispenser:
         # return True
 
         while retryCount < maxRetries and dispenserStatus == DispenserStatus.READING:
+            retryCount += 1
             dispenserStatus = self.getDispenserStatus()
 
         if dispenserStatus == DispenserStatus.READING:
             print("status stuck at read (womp womp)")
             raise ReadTimeoutError
 
+        print("retry count: " + str(retryCount))
+        print("eventual status: " + str(dispenserStatus))
         return dispenserStatus != DispenserStatus.NACK
             
     def getDispenserStatus(self):
@@ -97,13 +100,13 @@ class Dispenser:
         retryCount = 0
         responseVal = 0
 
-        print("BEGINNING STATUS CHECK")
+        # print("BEGINNING STATUS CHECK")
 
         while retryCount < maxRetries:
-            print("try #" + str(retryCount))
+            # print("try #" + str(retryCount))
 
             responseVal = self.bus.read_byte(self.address)
-            print(responseVal)
+            # print(responseVal)
 
             if responseVal in list(DispenserStatus):
                 return responseVal
@@ -165,12 +168,15 @@ class Dispenser:
 
                 # next comands simply send jar position and number of mg
                 cmd = self.ingredientCmd(ing.get("jar_pos"), round(mg))
+
+                # TODO: error handling
                 self.writeBlock(cmd)
 
                 print("ingredient sent---")
         
         print("checking for ready status.")
         while self.getDispenserStatus() != DispenserStatus.READY:
+            print("still dispensing...")
             time.sleep(1)
             # do we need to have a timeout?
 
