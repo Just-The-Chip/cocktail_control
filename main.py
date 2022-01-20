@@ -6,6 +6,7 @@ from kivy.app import App
 from kivy.core.window import Window
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.togglebutton import ToggleButton
+from kivy.uix.modalview import ModalView
 from kivy.uix.textinput import TextInput
 from kivy.clock import mainthread
 
@@ -29,10 +30,15 @@ class ScrollButton(ToggleButton):
         self.drink_id = kwargs.pop('drink_id')
         super(ScrollButton, self).__init__(**kwargs)
 
+class DispensingModal(ModalView):
+    def __init__(self, **kwargs):
+        super(DispensingModal, self).__init__(**kwargs)
+
 class MainScreen(GridLayout):
 
     widgetList = []
     currentPos = 0
+    dispensing_modal = None
 
     def __init__(self, drinks, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
@@ -85,6 +91,18 @@ class MainScreen(GridLayout):
 
     def get_current_drink(self):
         return  self.widgetList[self.currentPos]
+
+    @mainthread
+    def open_dispensing_modal(self):
+        self.dismiss_dispensing_modal()
+        self.dispensing_modal = DispensingModal()
+        self.dispensing_modal.open()
+
+    def dismiss_dispensing_modal(self):
+        if self.dispensing_modal:
+            self.dispensing_modal.dismiss(force=True)
+
+        self.dispensing_modal = None
 
 
 class MainApp(App):
@@ -150,10 +168,12 @@ class MainApp(App):
             self.dispense_current()
 
     def allow_selection(self):
+        self.screen.dismiss_dispensing_modal()
         self.encoder.enableInput()
         # remove dispensing popup
 
     def prevent_selection(self):
+        self.screen.open_dispensing_modal()
         self.encoder.disableInput()
         # show dispensing popup
 
