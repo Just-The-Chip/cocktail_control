@@ -1,3 +1,4 @@
+from imp import source_from_cache
 from kivy.config import Config
 Config.set('graphics', 'width', 800)
 Config.set('graphics', 'height', 480)
@@ -7,10 +8,11 @@ from kivy.core.window import Window
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.modalview import ModalView
-from kivy.uix.textinput import TextInput
+from kivy.uix.image import Image
 from kivy.clock import mainthread
 
 from configparser import ConfigParser as AppConfig
+from random import randint
 
 import sys
 import os
@@ -29,6 +31,11 @@ class ScrollButton(ToggleButton):
         self.img = curpath + '/images/' + kwargs.pop('img')
         self.drink_id = kwargs.pop('drink_id')
         super(ScrollButton, self).__init__(**kwargs)
+
+class RandomDrinkButton(ScrollButton):
+    def __init__(self, **kwargs):
+        kwargs.update({'img': 'RandomDrink.png', 'drink_id': -1})
+        super(RandomDrinkButton, self).__init__(**kwargs)
 
 class DispensingModal(ModalView):
     def __init__(self, **kwargs):
@@ -51,6 +58,11 @@ class MainScreen(GridLayout):
             self.widgetList.append(btn)
             container.add_widget(btn)
 
+        randomDrinkBtn = RandomDrinkButton(on_press=self.switch_image)
+
+        self.widgetList.append(randomDrinkBtn)
+        container.add_widget(randomDrinkBtn)
+
         self.select_current()
 
     def set_current(self, drinkPos):
@@ -65,6 +77,13 @@ class MainScreen(GridLayout):
 
         self.select_current()
 
+    def set_random(self):
+        self.widgetList[self.currentPos].state = 'normal'
+
+        # the last widget on the list is a random drink
+        randomPos = randint(0, len(self.widgetList) -2)
+        self.set_current(randomPos)
+
     @mainthread
     def next_widget(self, direction, **kwargs):
         increment = -1 if direction < 0 else 1
@@ -76,6 +95,7 @@ class MainScreen(GridLayout):
         if(callback and hasattr(callback, '__call__')):
             callback()
 
+    @mainthread
     def select_current(self):
         currentWidget = self.get_current_drink()
 
@@ -186,7 +206,14 @@ class MainApp(App):
         # self.dispenser.highlightDrink(recipe)
 
     def dispense_current(self):
-        self.dispense_drink(self.screen.get_current_drink().drink_id)
+        drink_id = self.screen.get_current_drink().drink_id
+
+        if (drink_id < 0):
+            self.screen.set_random()
+            drink_id = self.screen.get_current_drink().drink_id
+            self.dispense_current()
+        else:
+            self.dispense_drink(drink_id)
 
     def dispense_drink(self, drink_id):
         print(drink_id)
