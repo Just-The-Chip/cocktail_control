@@ -260,6 +260,28 @@ class IngredientRepository :
             "flow": row[4]
         }
 
+    def insertIngredient(self, name, jar_pos, mixer):
+
+        jarpos = None if jar_pos is not None and int(jar_pos) <= 0 else jar_pos
+        isMixer = 1 if mixer else 0
+
+        prevJar = self.getIngredient(jarpos, True) if jarpos is not None else None
+        if prevJar is not None:
+            self.updateIngredient(prevJar["id"], jar_pos=None)
+
+        conn = self._makeConnection()
+        c = conn.cursor()
+        query = "INSERT INTO ingredients(name, jar_pos, mixer) VALUES(?, ?, ?)"
+
+        c.execute(query, (name, jarpos, isMixer))
+
+        ingredientID = c.lastrowid
+
+        conn.commit()
+        conn.close()
+
+        return ingredientID
+
     def updateIngredient(self, ingID, **kwargs):
         qParams = {}
 
