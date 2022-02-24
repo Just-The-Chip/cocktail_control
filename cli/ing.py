@@ -42,7 +42,7 @@ def echoIngredients(ingredients):
 @click.group()
 def main():
     """
-    CLI for calibrating ingredients
+    CLI for managing ingredients
     """
     pass
 

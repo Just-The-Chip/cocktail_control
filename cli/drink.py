@@ -112,7 +112,7 @@ def echoIngredients(ingredients, outpuJson):
 @click.group()
 def main():
     """
-    CLI for calibrating ingredients
+    CLI for managing drinks
     """
     pass
 
