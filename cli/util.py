@@ -11,6 +11,7 @@ if(parentpath not in sys.path):
     sys.path.append(parentpath)
 
 from repository import IngredientRepository
+from repository import DrinkRepository
 from dispenser import Dispenser
 
 def configPath():
@@ -21,7 +22,7 @@ def getConfig():
     config.read(configPath())
     return config
 
-def getRepo():
+def getDBPath():
     config = getConfig()
 
     db_path = config['Database'].get('Path', 'data.db')
@@ -29,7 +30,13 @@ def getRepo():
     if not os.path.isabs(db_path):
         db_path = os.path.join(parentpath, db_path)
 
-    return IngredientRepository(db_path)
+    return db_path
+
+def getIngredientRepo():
+    return IngredientRepository(getDBPath())
+
+def getDrinkRepo():
+    return DrinkRepository(getDBPath())
 
 def getDispenser(**kwargs):
     config = getConfig()

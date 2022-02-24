@@ -6,6 +6,34 @@ class DrinkRepository:
     def __init__(self, dbPath):
         self.dbPath = dbPath
 
+    def getAllDrinks(self):
+        conn = self._makeConnection()
+        c = conn.cursor()
+        query = ("SELECT d.id, d.name, d.image, "
+        "SUM(CASE "
+        "WHEN i.jar_pos IS NOT NULL THEN 1 "
+        "ELSE i.mixer > 0 "
+        "END) = COUNT(d.id) as available "
+        "FROM drinks d "
+        "INNER JOIN drink_ingredient di ON d.id = di.drink_id "
+        "INNER JOIN ingredients i ON di.ingredient_id = i.id "
+        "GROUP BY d.id, d.name, d.image")
+
+        c.execute(query)
+
+        drinks = []
+        for row in c:
+            drinks.append({
+                "id": row[0],
+                "name": row[1],
+                "image": row[2],
+                "available": row[3]
+            })
+
+        conn.close()
+
+        return drinks
+
     def getAvailableDrinks(self):
         conn = self._makeConnection()
         c = conn.cursor()
@@ -27,12 +55,48 @@ class DrinkRepository:
             drinks.append({
                 "id": row[0],
                 "name": row[1],
-                "image": row[2]
+                "image": row[2],
+                "available": True
             })
 
         conn.close()
 
         return drinks
+
+    def getDrink(self, drinkID):
+        conn = self._makeConnection()
+        c = conn.cursor()
+
+        if str(drinkID).isdigit():
+            whereCol = "d.id"
+        else:
+            whereCol = "d.name"
+
+        query = ("SELECT d.id, d.name, d.image, "
+        "SUM(CASE "
+        "WHEN i.jar_pos IS NOT NULL THEN 1 "
+        "ELSE i.mixer > 0 "
+        "END) = COUNT(d.id) as available "
+        "FROM drinks d "
+        "INNER JOIN drink_ingredient di ON d.id = di.drink_id "
+        "INNER JOIN ingredients i ON di.ingredient_id = i.id "
+        "WHERE " + whereCol + " = ? "
+        "GROUP BY d.id, d.name, d.image")
+
+        c.execute(query, (drinkID,))
+        row = c.fetchone()
+
+        conn.close()
+
+        if row is None:
+            return None
+
+        return {
+            "id": row[0],
+            "name": row[1],
+            "image": row[2],
+            "available": row[3]
+        }
 
     def getDrinkRecipe(self, drinkID):
         conn = self._makeConnection()
@@ -74,15 +138,30 @@ class DrinkRepository:
 
         return drinkID
 
-    def updateDrink(self, drinkID, name, image, ingredients=None):
+    def updateDrink(self, drinkID, **kwargs):
+        qParams = {}
+
+        if "name" in kwargs and len(kwargs["name"]) > 0 :
+            qParams["name = ?"] = kwargs["name"]
+
+        if "image" in kwargs:
+            qParams["image = ?"] = kwargs["image"]
+
+        if len(qParams) == 0 and "ingredients" not in kwargs:
+            return False
+
         conn = self._makeConnection()
         c = conn.cursor()
-        query = "UPDATE drinks SET name = ?, image = ? WHERE id = ?"
 
-        c.execute(query, (name, image, drinkID))
+        if len(qParams) > 0:
+            query = "UPDATE drinks SET " + ", ".join(qParams.keys()) + " WHERE id = ?"
+            params = list(qParams.values())
+            params.append(drinkID)
 
-        if ingredients is not None:
-            self.updateDrinkRecipe(c, drinkID, ingredients)
+            c.execute(query, params)
+
+        if "ingredients" in kwargs:
+            self.updateDrinkRecipe(c, drinkID, kwargs["ingredients"])
 
         conn.commit()
         conn.close()
@@ -92,16 +171,15 @@ class DrinkRepository:
     def updateDrinkRecipe(self, cursor, drinkID, ingredients):
 
         # perhaps some other time we can go through the list and update existing ingredients but this makes it easier to get the order right.
-        cursor.execute("DELETE FROM drink_ingredient WHERE drink_id = ?", (drinkID))
+        cursor.execute("DELETE FROM drink_ingredient WHERE drink_id = ?", (drinkID,))
 
         params = []
-        query = "INSERT INTO drink_ingredient(drink_id, ingredient_id, oz) "
+        query = "INSERT INTO drink_ingredient(drink_id, ingredient_id, oz) VALUES(?, ?, ?)"
 
         for ing in ingredients:
-            query += "VALUES(?, ?, ?) "
-            params.extend([drinkID, ing.get('id'), ing.get('oz')])
+            params.append((drinkID, ing.get('id'), ing.get('oz')))
 
-        cursor.execute(query, params)
+        cursor.executemany(query, params)
 
     def deleteDrink(self, drinkID):
         conn = self._makeConnection()

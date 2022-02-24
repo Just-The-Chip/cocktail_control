@@ -9,7 +9,7 @@ curpath = os.path.dirname(__file__)
 if(curpath not in sys.path):
     sys.path.append(curpath)
 
-from util import getRepo
+from util import getIngredientRepo
 from util import getDispenser
 
 def echoIngredients(ingredients):
@@ -52,7 +52,7 @@ def listIng(avail):
     """
     Lists all ingredients
     """
-    repo = getRepo()
+    repo = getIngredientRepo()
 
     ings = repo.getAll(avail)
 
@@ -66,7 +66,7 @@ def describe(jar, ing):
     Describe an ingrediant by ID, jar, or name
     """
 
-    repo = getRepo()
+    repo = getIngredientRepo()
 
     ingredient = repo.getIngredient(ing, jar)
     if ingredient is None:
@@ -85,7 +85,7 @@ def update(ctx, flow, jar, mixer, name, id):
     """
     Update an ingrediant by ID
     """
-    repo = getRepo()
+    repo = getIngredientRepo()
 
     updateArgs = {}
     if flow is not None:
@@ -116,7 +116,7 @@ def test(flow, jar, ing):
     Dispense 1 oz of the ingredient specified by jar or ID
     """
 
-    repo = getRepo()
+    repo = getIngredientRepo()
 
     ingredient = repo.getIngredient(ing, jar)
     if ingredient is None:
