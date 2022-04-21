@@ -26,11 +26,11 @@ class IngredientList(click.ParamType):
             return jsonVal
             
         except json.JSONDecodeError:
-            self.fail(f"{value!r} is not a valid JSON list", param, ctx)
+            self.fail("{} is not a valid JSON list".format(str(value)), param, ctx)
         except ValueError:
-            self.fail(f"{value!r} is not a list", param, ctx)
+            self.fail("{} is not a list".format(str(value)), param, ctx)
         except BaseException as err:
-            self.fail(f"Unexpected {err=}, {type(err)=}", param, ctx)
+            self.fail("Unexpected err={}, type={}".format(err, type(err)), param, ctx)
 
 INGREDIENT_LIST = IngredientList()
 
@@ -136,7 +136,7 @@ def listDrink(avail):
 @click.argument('drink', required=True)
 def describe(json, drink):
     """
-    Describe an ingrediant by ID or name
+    Describe drink by ID or name
     """
 
     repo = getDrinkRepo()
@@ -174,7 +174,7 @@ def create(ctx, name, image, ingredients):
 @click.pass_context
 def update(ctx, name, image, ingredients, id):
     """
-    Update an ingrediant by ID
+    Update an drink by ID
     """
     repo = getDrinkRepo()
 
