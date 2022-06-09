@@ -4,11 +4,13 @@ Config.set('graphics', 'width', 800)
 Config.set('graphics', 'height', 480)
 
 from kivy.app import App
+from kivy.lang import Builder
 from kivy.core.window import Window
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.modalview import ModalView
 from kivy.uix.image import Image
+from kivy.uix.screenmanager import ScreenManager, Screen
 from kivy.clock import mainthread
 
 from configparser import ConfigParser as AppConfig
@@ -23,8 +25,8 @@ if(curpath not in sys.path):
     sys.path.append(curpath)
 
 from repository import DrinkRepository
-from dispenser import Dispenser
-from hardware import EncoderInput
+# from dispenser import Dispenser
+# from hardware import EncoderInput
 
 class ScrollButton(ToggleButton):
     def __init__(self, **kwargs):
@@ -41,17 +43,28 @@ class DispensingModal(ModalView):
     def __init__(self, **kwargs):
         super(DispensingModal, self).__init__(**kwargs)
 
-class MainScreen(GridLayout):
-
+class DrinkSelector(GridLayout):
     widgetList = []
     currentPos = 0
     dispensing_modal = None
 
-    def __init__(self, drinks, **kwargs):
-        super(MainScreen, self).__init__(**kwargs)
+    def __init__(self, **kwargs):
+        super(DrinkSelector, self).__init__(**kwargs)
 
+        self.clear_drinks()
+
+    def clear_drinks(self): 
         self.ids.preview.source = './images/hola.png'
+        self.currentPos = 0
 
+        container = self.ids.container
+
+        for drinkWidget in self.widgetList:
+            container.remove_widget(drinkWidget)
+
+        self.widgetList = []
+
+    def load_drinks(self, drinks):
         container = self.ids.container
         for drink in drinks:
             btn = ScrollButton(drink_id=drink['id'], img=drink['image'], text=drink['name'], on_press=self.switch_image)
@@ -125,26 +138,32 @@ class MainScreen(GridLayout):
         self.dispensing_modal = None
 
 
-class MainApp(App):
+class DrinkSelectorScreen(Screen):
 
-    config = AppConfig()
-    dispenser = Dispenser(0x04)
+    # dispenser = Dispenser(0x04)
 
     #drinks = [{'img': './images/shark_cat.jpg', 'name': 'Shark Cat'}, {'img': './images/Batman.jpg', 'name': 'Batman!'}, {'img': './images/squirtle.jpg', 'name': 'Squirtle'}]
 
-    def __init__(self):
-        self.setup_config()
+    def __init__(self, config, **kwargs):
+        self.config = config
         self.setup_repository()
-        self.setup_dispenser()
-        self.setup_encoder()
+        # self.setup_dispenser()
+        # self.setup_encoder()
+        
+        super(DrinkSelectorScreen, self).__init__(**kwargs)
 
+    def add_drink_selector(self): 
+        self.drink_selector = DrinkSelector()
+        self.add_widget(self.drink_selector)
+        self.refresh_drinks()
+
+    def refresh_drinks(self):
         self.drinks = self.repository.getAvailableDrinks()
-        super().__init__()
-
-    def setup_config(self):
-        self.config.read(curpath + '/config.ini')
+        self.drink_selector.clear_drinks()
+        self.drink_selector.load_drinks(self.drinks)
 
     def setup_repository(self):
+        # print({section: dict(self.config[section]) for section in self.config.sections()})        
         db_path = self.config['Database'].get('Path', 'data.db')
 
         if not os.path.isabs(db_path):
@@ -152,65 +171,54 @@ class MainApp(App):
 
         self.repository = DrinkRepository(db_path)
 
-    def setup_dispenser(self):
-        addr = int(self.config['Dispenser'].get('Address', '0x00'), 16)
+    # def setup_dispenser(self):
+    #     addr = int(self.config['Dispenser'].get('Address', '0x00'), 16)
 
-        single = int(self.config['Hardware'].get('SwitchSingle'))
-        double = int(self.config['Hardware'].get('SwitchDouble'))
+    #     single = int(self.config['Hardware'].get('SwitchSingle'))
+    #     double = int(self.config['Hardware'].get('SwitchDouble'))
 
-        self.dispenser = Dispenser(addr, spin=single, dpin=double)
+    #     self.dispenser = Dispenser(addr, spin=single, dpin=double)
 
-    def setup_encoder(self):
-        clk = int(self.config['Hardware'].get('RotaryClk'))
-        dt = int(self.config['Hardware'].get('RotaryDt'))
-        btn = int(self.config['Hardware'].get('SelectBtn'))
+    # def setup_encoder(self):
+    #     clk = int(self.config['Hardware'].get('RotaryClk'))
+    #     dt = int(self.config['Hardware'].get('RotaryDt'))
+    #     btn = int(self.config['Hardware'].get('SelectBtn'))
 
-        r = int(self.config['Hardware'].get('rotaryRLED'))
-        g = int(self.config['Hardware'].get('rotaryGLED'))
-        b = int(self.config['Hardware'].get('rotaryBLED'))
+    #     r = int(self.config['Hardware'].get('rotaryRLED'))
+    #     g = int(self.config['Hardware'].get('rotaryGLED'))
+    #     b = int(self.config['Hardware'].get('rotaryBLED'))
 
-        self.encoder = EncoderInput(clk, dt, btn, r, g, b)
+    #     self.encoder = EncoderInput(clk, dt, btn, r, g, b)
 
-    def build(self):
-        self.screen = MainScreen(self.drinks)
-        Window.bind(on_keyboard=self.check_hotkey)
-
-        self.encoder.setupEncoderEvents(lambda dir: self.select_next(dir), self.dispense_current)
-
-        return self.screen
-
-    def check_hotkey(self, window, key, scancode, codepoint, modifier):
-        # yay thanks https://stackoverflow.com/a/47922465/2993366
-        if modifier == ['shift'] and codepoint.lower() == 'q':
-            self.stop()
-
-        elif modifier == [] and codepoint.lower() == 'enter':
+    def handle_hotkey(self, key, modifier):
+        if modifier == [] and (key == 40 or key == 'enter'):
+            print("dispenssssssss")
             self.dispense_current()
 
     def allow_selection(self):
-        self.screen.dismiss_dispensing_modal()
-        self.encoder.enableInput()
+        self.drink_selector.dismiss_dispensing_modal()
+        # self.encoder.enableInput()
         # remove dispensing popup
 
     def prevent_selection(self):
-        self.screen.open_dispensing_modal()
-        self.encoder.disableInput()
+        self.drink_selector.open_dispensing_modal()
+        # self.encoder.disableInput()
         # show dispensing popup
 
     def select_next(self, dir):
-        self.screen.next_widget(dir, callback=lambda: self.highlight_current())
+        self.drink_selector.next_widget(dir, callback=lambda: self.highlight_current())
 
     def highlight_current(self):
-        drink_id = self.screen.get_current_drink().drink_id
+        drink_id = self.drink_selector.get_current_drink().drink_id
         recipe = self.repository.getDrinkRecipe(drink_id)
         # self.dispenser.highlightDrink(recipe)
 
     def dispense_current(self):
-        drink_id = self.screen.get_current_drink().drink_id
+        drink_id = self.drink_selector.get_current_drink().drink_id
 
         if (drink_id < 0):
-            self.screen.set_random()
-            drink_id = self.screen.get_current_drink().drink_id
+            self.drink_selector.set_random()
+            drink_id = self.drink_selector.get_current_drink().drink_id
             self.dispense_current()
         else:
             self.dispense_drink(drink_id)
@@ -220,7 +228,46 @@ class MainApp(App):
         recipe = self.repository.getDrinkRecipe(drink_id)
 
         self.prevent_selection()
-        self.dispenser.dispenseDrink(recipe, self.allow_selection)
+        # self.dispenser.dispenseDrink(recipe, self.allow_selection)
+
+class MainApp(App):
+
+    config = AppConfig()
+
+    def __init__(self):
+        # self.setup_config()
+        Builder.load_file(curpath + '/drink_selector.kv')
+
+
+        super().__init__()
+
+    def setup_config(self):
+        self.config.read(curpath + '/config.ini')
+
+    def build(self):
+        self.setup_config()       
+
+        self.screen_manager = ScreenManager()
+
+        self.drink_screen = DrinkSelectorScreen(self.config, name="drink_selector")
+        self.screen_manager.add_widget(self.drink_screen)
+
+        self.screen_manager.current = "drink_selector"
+
+        Window.bind(on_keyboard=self.check_hotkey)
+
+        return self.screen_manager
+
+    def check_hotkey(self, window, keycode, scancode, codepoint, modifier):
+        print(keycode, scancode, codepoint, modifier)
+
+        key = codepoint.lower() if codepoint is not None else scancode
+        # yay thanks https://stackoverflow.com/a/47922465/2993366
+        if modifier == ['shift'] and (key == 'q' or key == 113):
+            self.stop()
+
+        else:
+            self.screen_manager.current_screen.handle_hotkey(key, modifier)
 
 if __name__ == '__main__':
     MainApp().run()
