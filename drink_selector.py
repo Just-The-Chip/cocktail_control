@@ -16,8 +16,8 @@ if(curpath not in sys.path):
     sys.path.append(curpath)
 
 from repository import DrinkRepository
-from dispenser import Dispenser
-from hardware import EncoderInput
+# from dispenser import Dispenser
+# from hardware import EncoderInput
 
 class ScrollButton(ToggleButton):
     def __init__(self, **kwargs):
@@ -131,7 +131,7 @@ class DrinkSelector(GridLayout):
 
 class DrinkSelectorScreen(Screen):
 
-    dispenser = Dispenser(0x04)
+    # dispenser = Dispenser(0x04)
 
     drink_selector = None
 
@@ -143,7 +143,7 @@ class DrinkSelectorScreen(Screen):
         self.setup_dispenser()
         self.setup_encoder()
 
-        self.encoder.setupEncoderEvents(lambda dir: self.select_next(dir), self.dispense_current)
+        # self.encoder.setupEncoderEvents(lambda dir: self.select_next(dir), self.dispense_current)
         
         super(DrinkSelectorScreen, self).__init__(**kwargs)
 
@@ -174,7 +174,7 @@ class DrinkSelectorScreen(Screen):
         single = int(self.config['Hardware'].get('SwitchSingle'))
         double = int(self.config['Hardware'].get('SwitchDouble'))
 
-        self.dispenser = Dispenser(addr, spin=single, dpin=double)
+        # self.dispenser = Dispenser(addr, spin=single, dpin=double)
 
     def setup_encoder(self):
         clk = int(self.config['Hardware'].get('RotaryClk'))
@@ -185,7 +185,7 @@ class DrinkSelectorScreen(Screen):
         g = int(self.config['Hardware'].get('rotaryGLED'))
         b = int(self.config['Hardware'].get('rotaryBLED'))
 
-        self.encoder = EncoderInput(clk, dt, btn, r, g, b)
+        # self.encoder = EncoderInput(clk, dt, btn, r, g, b)
 
     def handle_hotkey(self, key, modifier):
         if modifier == [] and (key == 40 or key == 'enter'):
@@ -194,12 +194,12 @@ class DrinkSelectorScreen(Screen):
 
     def allow_selection(self):
         self.drink_selector.dismiss_dispensing_modal()
-        self.encoder.enableInput()
+        # self.encoder.enableInput()
         # remove dispensing popup
 
     def prevent_selection(self):
         self.drink_selector.open_dispensing_modal()
-        self.encoder.disableInput()
+        # self.encoder.disableInput()
         # show dispensing popup
 
     def select_next(self, dir):
@@ -208,7 +208,7 @@ class DrinkSelectorScreen(Screen):
     def highlight_current(self):
         drink_id = self.drink_selector.get_current_drink().drink_id
         recipe = self.repository.getDrinkRecipe(drink_id)
-        # self.dispenser.highlightDrink(recipe)
+        ## self.dispenser.highlightDrink(recipe)
 
     def dispense_current(self):
         drink_id = self.drink_selector.get_current_drink().drink_id
@@ -225,4 +225,4 @@ class DrinkSelectorScreen(Screen):
         recipe = self.repository.getDrinkRecipe(drink_id)
 
         self.prevent_selection()
-        self.dispenser.dispenseDrink(recipe, self.allow_selection)
+        # self.dispenser.dispenseDrink(recipe, self.allow_selection)

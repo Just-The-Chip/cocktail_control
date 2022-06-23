@@ -3,6 +3,9 @@
 #:import win kivy.core.window
 
 <SettingsScreen>:
+    on_pre_enter: self.setup_ingredient_settings()
+
+<IngredientSettings>:
     cols: 1
     GridLayout:
         cols:1
@@ -13,12 +16,12 @@
 
         ScrollView:
             size_hint: None, None
-            size: 250, 480
+            size: 800, 480
             pos_hint: {'center_x': .5, 'center_y': .5}
             id: scrollview
 
             GridLayout:
-                cols: 2
+                cols: 1
                 padding: 10
                 spacing: 5
                 height: self.minimum_height
@@ -26,27 +29,39 @@
                 do_scroll_x: False
                 id: container
 
+# <IngredientSettings>
+#     padding: 10
+#     spacing: 5
+#     height: self.minimum_height
+#     size_hint: None, None
+#     do_scroll_x: False
+#     id: container
+
 <IngredientDropdownItem>
-
-
-<IngredientDropdownItem>
+    # ingredient_name: ""
+    current_pos: None
+    current_pos_text: " (currently at {})".format(str(self.current_pos)) if self.current_pos is not None else ""
     size_hint: None, None
-    size: 250, 40
+    size: 450, 40
+    text: self.ingredient_name + self.current_pos_text
+    on_release: self.select_ingredient()
 
-<RandomDrinkButton>
-    size_hint: None, None
-    size: 250, 40
-    text: 'Random Drink'
+<PositionSetting>
+    cols: 2
+    size_hint: None, None 
+    size: 600, 40
+    pos_hint: {'center_x': .5, 'center_y': .5}
 
-<ModalView>
-    size_hint: None, None
-    auto_dismiss: False
-    size: 440, 115
-    background_normal: ''
-    Image:
-        source: './images/Dispensing.gif'
-        anim_delay: 0.5
-        size_hint: None, None
-        allow_stretch: True
-        size: 400, 75
+    Label:
+        text: "Position {}".format(str(root.jar_pos))
+        width: 100
+        size_hint_x: None
 
+    ToggleButton:
+        text: root.ingredient_name
+        on_release: root.open_dropdown(self)
+        size_hint_y: None
+        size: 450, 40
+
+    Widget:
+        on_parent: root.dismiss_dropdown()

@@ -18,6 +18,7 @@ if(curpath not in sys.path):
     sys.path.append(curpath)
 
 from drink_selector import DrinkSelectorScreen
+from settings import SettingsScreen
 
 class MainApp(App):
 
@@ -26,7 +27,7 @@ class MainApp(App):
     def __init__(self):
         # self.setup_config()
         Builder.load_file(curpath + '/drink_selector.kv')
-
+        Builder.load_file(curpath + '/settings.kv')
 
         super().__init__()
 
@@ -41,7 +42,10 @@ class MainApp(App):
         self.drink_screen = DrinkSelectorScreen(self.config, name="drink_selector")
         self.screen_manager.add_widget(self.drink_screen)
 
-        self.screen_manager.current = "drink_selector"
+        self.settings_screen = SettingsScreen(self.config, name="settings")
+        self.screen_manager.add_widget(self.settings_screen)
+
+        self.screen_manager.current = "settings"
 
         Window.bind(on_keyboard=self.check_hotkey)
 
