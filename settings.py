@@ -1,3 +1,4 @@
+from kivy.uix.dropdown import DropDown
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.screenmanager import Screen
@@ -12,6 +13,16 @@ if(curpath not in sys.path):
     sys.path.append(curpath)
 
 from repository import IngredientRepository
+
+class IngredientMenuItem(ToggleButton):
+    def __init__(self, **kwargs):
+        self.current_pos = kwargs.pop('current_pos')
+        self.ingredient_name = kwargs.pop('ingredient_name')
+        # self.dropdown = kwargs.pop('dropdown')
+        super(IngredientMenuItem, self).__init__(**kwargs)
+
+    def select_ingredient(self):
+        print("selected ingredient!")
 
 class PositionSetting(GridLayout):
     def __init__(self, **kwargs):
@@ -38,6 +49,8 @@ class IngredientSettings(GridLayout):
         super(IngredientSettings, self).__init__(**kwargs)
 
         self.load_ingredients()
+        self.build_menu()
+        self.build_position_settings()
 
     # def clear_drinks(self): 
     #     self.ids.preview.source = './images/hola.png'
@@ -51,13 +64,28 @@ class IngredientSettings(GridLayout):
     #     self.widgetList = []
 
     def load_ingredients(self):
-        container = self.ids.container
         self.ingredients = self.repository.getAll()
+
+        # self.select_current()
+
+    def build_menu(self):
+        menu = self.ids.menu
+
+        sortedIngredients = sorted(self.ingredients, key=lambda ingredient: ingredient['name'])
+        self.dropdownItems = []
+
+        for ingredient in sortedIngredients: 
+            dropdownItem = IngredientMenuItem(current_pos=ingredient['jar_pos'], ingredient_name=ingredient['name'])
+            self.dropdownItems.append(dropdownItem)
+            menu.add_widget(dropdownItem)
+
+
+    def build_position_settings(self): 
+        container = self.ids.container
+
         for i in range(self.totalPositions):
             # btn = ScrollButton(drink_id=drink['id'], img=drink['image'], text=drink['name'], on_press=self.switch_image)
             positionIngredient = list(filter(lambda ingredient: ingredient['jar_pos'] == i + 1, self.ingredients))
-
-            print(positionIngredient)
 
             ingredientName = positionIngredient[0]['name'] if len(positionIngredient) > 0 else ''
 
@@ -66,8 +94,7 @@ class IngredientSettings(GridLayout):
             self.widgetList.append(settingWidget)
             container.add_widget(settingWidget)
 
-        # self.select_current()
-
+   
     # def set_current(self, drinkPos):
     #     self.widgetList[self.currentPos].state = 'normal'
 
