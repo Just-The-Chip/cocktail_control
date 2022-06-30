@@ -1,4 +1,3 @@
-from kivy.uix.dropdown import DropDown
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.screenmanager import Screen
@@ -18,26 +17,86 @@ class IngredientMenuItem(ToggleButton):
     def __init__(self, **kwargs):
         self.current_pos = kwargs.pop('current_pos')
         self.ingredient_name = kwargs.pop('ingredient_name')
-        # self.dropdown = kwargs.pop('dropdown')
+        # self.menu = kwargs.pop('menu')
         super(IngredientMenuItem, self).__init__(**kwargs)
 
-    def select_ingredient(self):
-        print("selected ingredient!")
+    # def select_ingredient(self):
+    #     print("selected ingredient!")
 
 class PositionSetting(GridLayout):
     def __init__(self, **kwargs):
         self.jar_pos = kwargs.pop('jar_pos')
         self.ingredient_name = kwargs.pop('ingredient_name')
-        # self.dropdown = kwargs.pop('dropdown')
+        self.menu = kwargs.pop('menu')
         super(PositionSetting, self).__init__(**kwargs)
 
-    def open_dropdown(self, btn):
-        # self.dropdown.open(btn)
-        print("open dropdown!")
+    def open_menu(self):
+        self.menu.close()
+        self.menu.open(self.jar_pos)
+        print("open menu!")
 
-    def dismiss_dropdown(self): 
-        # self.dropdown.dismiss()
-        print("dismiss dropdown!")
+    def close_menu(self): 
+        self.menu.close()
+        print("dismiss menu!")
+
+class IngredientMenu(GridLayout):
+    menuItems = []
+    currentPos = 0
+    selected_position = 0
+
+    def __init__(self, **kwargs):
+        self.repository = kwargs.pop('repository')
+        self.scrollview = kwargs.pop('scrollview')
+        super(IngredientMenu, self).__init__(**kwargs)
+
+    def get_ingredients(self):
+        return self.repository.getAll()
+
+    def add_ingredient_option(self, ingredient):
+        menuItem = IngredientMenuItem(
+            on_release=lambda _: self.confirm_selection(ingredient), 
+            current_pos=ingredient['jar_pos'], 
+            ingredient_name=ingredient['name']
+        )
+        self.menuItems.append(menuItem)
+        self.add_widget(menuItem)
+
+        return menuItem
+
+    def confirm_selection(self, ingredient):
+        print(ingredient['name'])
+        # update repository
+        # callback for parent menu?
+        self.close()
+
+    def open(self, selected_position):
+        self.menuItems = []
+        self.selected_position = selected_position
+
+        sortedIngredients = sorted(self.get_ingredients(), key=lambda ingredient: ingredient['name'])
+        selected_option = None
+
+        for ingredient in sortedIngredients: 
+            option = self.add_ingredient_option(ingredient)
+            if ingredient['jar_pos'] == selected_position: 
+                selected_option = option
+                self.currentPos = len(self.menuItems) - 1
+
+        self.select_current()
+
+    def select_current(self):
+        selected_option = self.menuItems[self.currentPos]
+        self.scrollview.scroll_to(selected_option)
+        selected_option.state = 'down'
+
+    def close(self): 
+        self.currentPos = 0
+
+        for menu_item in self.menuItems:
+            self.remove_widget(menu_item)
+
+        self.menuItems = []
+
 
 class IngredientSettings(GridLayout):
     widgetList = []
@@ -48,48 +107,45 @@ class IngredientSettings(GridLayout):
         self.repository = kwargs.pop('repository')
         super(IngredientSettings, self).__init__(**kwargs)
 
-        self.load_ingredients()
         self.build_menu()
         self.build_position_settings()
 
-    # def clear_drinks(self): 
-    #     self.ids.preview.source = './images/hola.png'
-    #     self.currentPos = 0
+    def destroy_position_settings(self): 
+        # self.currentPos = 0
 
-    #     container = self.ids.container
+        container = self.ids.container
 
-    #     for drinkWidget in self.widgetList:
-    #         container.remove_widget(drinkWidget)
+        for drinkWidget in self.widgetList:
+            container.remove_widget(drinkWidget)
 
-    #     self.widgetList = []
+        self.widgetList = []
 
-    def load_ingredients(self):
-        self.ingredients = self.repository.getAll()
+    def get_ingredients(self):
+        return self.repository.getAll()
 
         # self.select_current()
 
     def build_menu(self):
-        menu = self.ids.menu
+        self.menu = IngredientMenu(repository=self.repository, scrollview=self.ids.menu_scrollview)
+        self.ids.menu_scrollview.add_widget(self.menu)
 
-        sortedIngredients = sorted(self.ingredients, key=lambda ingredient: ingredient['name'])
-        self.dropdownItems = []
+    # def destroy_menu(self): 
+    #     if self.menu is not None:
+    #         self.ids.menu_scrollview.remove_widget(self.menu)
 
-        for ingredient in sortedIngredients: 
-            dropdownItem = IngredientMenuItem(current_pos=ingredient['jar_pos'], ingredient_name=ingredient['name'])
-            self.dropdownItems.append(dropdownItem)
-            menu.add_widget(dropdownItem)
-
+    #     self.menu = None
 
     def build_position_settings(self): 
         container = self.ids.container
+        ingredients = self.get_ingredients()
 
         for i in range(self.totalPositions):
             # btn = ScrollButton(drink_id=drink['id'], img=drink['image'], text=drink['name'], on_press=self.switch_image)
-            positionIngredient = list(filter(lambda ingredient: ingredient['jar_pos'] == i + 1, self.ingredients))
+            positionIngredient = list(filter(lambda ingredient: ingredient['jar_pos'] == i + 1, ingredients))
 
             ingredientName = positionIngredient[0]['name'] if len(positionIngredient) > 0 else ''
 
-            settingWidget = PositionSetting(jar_pos=i+1, ingredient_name=ingredientName)
+            settingWidget = PositionSetting(jar_pos=i+1, ingredient_name=ingredientName, menu=self.menu)
 
             self.widgetList.append(settingWidget)
             container.add_widget(settingWidget)

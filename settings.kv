@@ -35,14 +35,22 @@
             pos_hint: {'center_x': .5, 'center_y': .5}
             id: menu_scrollview
 
-            GridLayout:
-                cols: 1
-                padding: 10
-                spacing: 5
-                height: self.minimum_height
-                size_hint: None, None
-                do_scroll_x: False
-                id: menu
+            # GridLayout:
+            #     cols: 1
+            #     padding: 10
+            #     spacing: 5
+            #     height: self.minimum_height
+            #     size_hint: None, None
+            #     do_scroll_x: False
+            #     id: menu
+
+<IngredientMenu>
+    cols: 1
+    padding: 10
+    spacing: 5
+    height: self.minimum_height
+    size_hint: None, None
+    do_scroll_x: False
 
 <IngredientMenuItem>
     # ingredient_name: ""
@@ -51,7 +59,7 @@
     size_hint: None, None
     size: 400, 40
     text: self.ingredient_name + self.current_pos_text
-    on_release: self.select_ingredient()
+    # on_release: self.select_ingredient()
 
 <PositionSetting>
     cols: 2
@@ -66,9 +74,9 @@
 
     ToggleButton:
         text: root.ingredient_name
-        on_release: root.open_dropdown(self)
+        on_release: root.open_menu()
         size_hint_y: None
         size: 300, 40
 
     Widget:
-        on_parent: root.dismiss_dropdown()
+        on_parent: root.close_menu()
