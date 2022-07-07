@@ -21,7 +21,8 @@ from repository import DrinkRepository
 
 class ScrollButton(ToggleButton):
     def __init__(self, **kwargs):
-        self.img = curpath + '/images/' + kwargs.pop('img')
+        image_name = kwargs.pop('img') or 'hola.png'
+        self.img = curpath + '/images/' + image_name
         self.drink_id = kwargs.pop('drink_id')
         super(ScrollButton, self).__init__(**kwargs)
 

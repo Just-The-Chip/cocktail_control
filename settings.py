@@ -17,7 +17,7 @@ class IngredientMenuItem(ToggleButton):
     def __init__(self, **kwargs):
         self.current_pos = kwargs.pop('current_pos')
         self.ingredient_name = kwargs.pop('ingredient_name')
-        # self.menu = kwargs.pop('menu')
+        self.ingredient_id = kwargs.pop('ingredient_id')
         super(IngredientMenuItem, self).__init__(**kwargs)
 
 class PositionSetting(GridLayout):
@@ -40,6 +40,7 @@ class IngredientMenu(GridLayout):
     menuItems = []
     currentPos = 0
     selected_position = 0
+    _menu_open = False
 
     def __init__(self, **kwargs):
         self.repository = kwargs.pop('repository')
@@ -50,11 +51,12 @@ class IngredientMenu(GridLayout):
     def get_ingredients(self):
         return self.repository.getAll()
 
-    def add_ingredient_option(self, ingredient):
+    def add_ingredient_option(self, ingredient, menuPos):
         menuItem = IngredientMenuItem(
-            on_release=lambda _: self.confirm_selection(ingredient), 
+            on_release=lambda _: self.set_current(menuPos), 
             current_pos=ingredient['jar_pos'], 
-            ingredient_name=ingredient['name']
+            ingredient_name=ingredient['name'],
+            ingredient_id = ingredient["id"]
         )
         self.menuItems.append(menuItem)
         self.add_widget(menuItem)
@@ -63,11 +65,13 @@ class IngredientMenu(GridLayout):
 
     def add_none_option(self):
         fake_ingredient = {"id": None, "jar_pos": None, "name": "--None--"}
-        self.add_ingredient_option(fake_ingredient)
+        self.add_ingredient_option(fake_ingredient, 0)
 
-    def confirm_selection(self, ingredient):
-        print(ingredient['name'])
-        self.confirm_callback(ingredient["id"], self.selected_position)
+    def confirm_selection(self):
+        selectedIngredient = self.menuItems[self.currentPos]
+
+        print(selectedIngredient.ingredient_name)
+        self.confirm_callback(selectedIngredient.ingredient_id, self.selected_position)
         self.close()
 
     def open(self, selected_position):
@@ -78,17 +82,15 @@ class IngredientMenu(GridLayout):
 
         self.add_none_option()
 
+        i = 0
         for ingredient in sortedIngredients: 
-            self.add_ingredient_option(ingredient)
+            i += 1
+            self.add_ingredient_option(ingredient, i)
             if ingredient['jar_pos'] == selected_position: 
-                self.currentPos = len(self.menuItems) - 1
+                self.currentPos = i
 
         self.select_current()
-
-    def select_current(self):
-        selected_option = self.menuItems[self.currentPos]
-        self.scrollview.scroll_to(selected_option)
-        selected_option.state = 'down'
+        self._menu_open = True
 
     def close(self): 
         self.currentPos = 0
@@ -97,6 +99,33 @@ class IngredientMenu(GridLayout):
             self.remove_widget(menu_item)
 
         self.menuItems = []
+        self._menu_open = False
+
+    def is_open(self):
+        return self._menu_open
+
+    def select_current(self):
+        selected_option = self.menuItems[self.currentPos]
+        self.scrollview.scroll_to(selected_option)
+        selected_option.state = 'down'
+
+    def set_current(self, menuPos):
+        self.menuItems[self.currentPos].state = 'normal'
+
+        if menuPos >= len(self.menuItems):
+            menuPos = 0
+        elif menuPos < 0:
+            menuPos = len(self.menuItems) - 1
+
+        self.currentPos = menuPos
+
+        self.select_current()
+
+    def next_menu_item(self, direction):
+        increment = -1 if direction < 0 else 1
+        # print("RECEIVED NEXT WIDGET COMMAND")
+
+        self.set_current(self.currentPos + increment)
 
 
 class IngredientSettings(GridLayout):
@@ -121,12 +150,6 @@ class IngredientSettings(GridLayout):
             confirm_callback=self.update_position
         )
         self.ids.menu_scrollview.add_widget(self.menu)
-
-    # def destroy_menu(self): 
-    #     if self.menu is not None:
-    #         self.ids.menu_scrollview.remove_widget(self.menu)
-
-    #     self.menu = None
 
     def update_position(self, ingredient_id, position):
         self.repository.updateIngredient(ingredient_id, jar_pos=position)
@@ -153,9 +176,7 @@ class IngredientSettings(GridLayout):
 
         self.select_current()
 
-    def destroy_position_settings(self): 
-        # self.currentPos = 0
-
+    def destroy_position_settings(self):
         container = self.ids.container
 
         for drinkWidget in self.widgetList:
@@ -171,38 +192,55 @@ class IngredientSettings(GridLayout):
         selected_position = self.widgetList[self.currentPos]
         self.ids.scrollview.scroll_to(selected_position)
         selected_position.ids.toggle_btn.state = 'down'
-
    
-    # def set_current(self, drinkPos):
-    #     self.widgetList[self.currentPos].state = 'normal'
+    def set_current(self, widgetPos):
+        self.widgetList[self.currentPos].ids.toggle_btn.state = 'normal'
 
-    #     if drinkPos >= len(self.widgetList):
-    #         drinkPos = 0
-    #     elif drinkPos < 0:
-    #         drinkPos = len(self.widgetList) - 1
+        if widgetPos >= len(self.widgetList):
+            widgetPos = 0
+        elif widgetPos < 0:
+            widgetPos = len(self.widgetList) - 1
 
-    #     self.currentPos = drinkPos
+        self.currentPos = widgetPos
 
-    #     self.select_current()
+        self.select_current()
 
-    # def next_widget(self, direction, **kwargs):
-    #     increment = -1 if direction < 0 else 1
-    #     # print("RECEIVED NEXT WIDGET COMMAND")
+    def next_widget(self, direction):
+        increment = -1 if direction < 0 else 1
+        # print("RECEIVED NEXT WIDGET COMMAND")
 
-    #     self.set_current(self.currentPos + increment)
+        self.set_current(self.currentPos + increment)
 
-    #     callback = kwargs.get("callback")
-    #     if(callback and hasattr(callback, '__call__')):
-    #         callback()
+    def handle_up_key(self):
+        if self.menu.is_open():
+            self.menu.next_menu_item(-1)
+        else:
+            self.next_widget(-1)
 
-    # def select_current(self):
-    #     currentWidget = self.get_current_drink()
+    def handle_down_key(self):
+        if self.menu.is_open():
+            self.menu.next_menu_item(1)
+        else:
+            self.next_widget(1)
 
-    #     currentWidget.state = 'down'
+    def handle_left_key(self):
+        if self.menu.is_open():
+            self.menu.close()
 
-    #     self.ids.preview.source = os.path.abspath(currentWidget.img)
+    def handle_right_key(self):
+        currentWidget = self.widgetList[self.currentPos]
+        print("Handle right key")
+        print(currentWidget)
 
-    #     self.ids.scrollview.scroll_to(currentWidget)
+        if not self.menu.is_open() and currentWidget is not None:
+            print("open menu")
+            currentWidget.open_menu()
+
+    def handle_enter_key(self):
+        if self.menu.is_open():
+            self.menu.confirm_selection()
+        else:
+            self.handle_right_key()
 
     # def get_current_drink(self):
     #     return  self.widgetList[self.currentPos]
@@ -234,8 +272,25 @@ class SettingsScreen(Screen):
     def handle_hotkey(self, key, modifier):
         print(key)
         print(modifier)
-        if modifier == [] and (key == 40 or key == 'enter'):
-            print("enter keeeeyyyyyy")
+        if modifier != []:
+            print("FJDSKLFJKLDSJFKLDSJLFJSLJFLDSKL")
+            return
+
+        if key == 40 or key == 'enter':
+            self.ingredient_settings.handle_enter_key()
+
+        elif key == 79 or key == 'right':
+            self.ingredient_settings.handle_right_key()
+
+        elif key == 80 or key == 'left':
+            self.ingredient_settings.handle_left_key()
+
+        elif key == 81 or key == 'down':
+            self.ingredient_settings.handle_down_key()
+
+        elif key == 82 or key == 'up':
+            self.ingredient_settings.handle_up_key()
+
 
     # def select_next(self, dir):
     #     self.ingredient_settings.next_widget(dir, callback=lambda: self.highlight_current())

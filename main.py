@@ -45,7 +45,7 @@ class MainApp(App):
         self.settings_screen = SettingsScreen(self.config, name="settings")
         self.screen_manager.add_widget(self.settings_screen)
 
-        self.screen_manager.current = "settings"
+        self.screen_manager.current = "drink_selector"
 
         Window.bind(on_keyboard=self.check_hotkey)
 
@@ -56,8 +56,14 @@ class MainApp(App):
 
         key = codepoint.lower() if codepoint is not None else scancode
         # yay thanks https://stackoverflow.com/a/47922465/2993366
-        if modifier == ['shift'] and (key == 'q' or key == 113):
+        if modifier == ['shift'] and (key == 'q' or key == 20):
             self.stop()
+
+        elif modifier == ['shift'] and (key == 's' or key == 22):
+            self.screen_manager.current = "settings"
+
+        elif modifier == ['shift'] and (key == 'd' or key == 7):
+            self.screen_manager.current = "drink_selector"
 
         else:
             self.screen_manager.current_screen.handle_hotkey(key, modifier)
