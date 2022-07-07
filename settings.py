@@ -1,8 +1,6 @@
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.screenmanager import Screen
-from kivy.uix.image import Image
-from kivy.clock import mainthread
 
 import sys
 import os
@@ -272,9 +270,6 @@ class SettingsScreen(Screen):
     def handle_hotkey(self, key, modifier):
         print(key)
         print(modifier)
-        if modifier != []:
-            print("FJDSKLFJKLDSJFKLDSJLFJSLJFLDSKL")
-            return
 
         if key == 40 or key == 'enter':
             self.ingredient_settings.handle_enter_key()
@@ -291,6 +286,3 @@ class SettingsScreen(Screen):
         elif key == 82 or key == 'up':
             self.ingredient_settings.handle_up_key()
 
-
-    # def select_next(self, dir):
-    #     self.ingredient_settings.next_widget(dir, callback=lambda: self.highlight_current())
