@@ -61,11 +61,13 @@ class IngredientMenu(GridLayout):
 
         return menuItem
 
+    def add_none_option(self):
+        fake_ingredient = {"id": None, "jar_pos": None, "name": "--None--"}
+        self.add_ingredient_option(fake_ingredient)
+
     def confirm_selection(self, ingredient):
         print(ingredient['name'])
-        # update repository
-        self.confirm_callback()
-        # callback for parent menu?
+        self.confirm_callback(ingredient["id"], self.selected_position)
         self.close()
 
     def open(self, selected_position):
@@ -74,8 +76,10 @@ class IngredientMenu(GridLayout):
 
         sortedIngredients = sorted(self.get_ingredients(), key=lambda ingredient: ingredient['name'])
 
+        self.add_none_option()
+
         for ingredient in sortedIngredients: 
-            option = self.add_ingredient_option(ingredient)
+            self.add_ingredient_option(ingredient)
             if ingredient['jar_pos'] == selected_position: 
                 self.currentPos = len(self.menuItems) - 1
 
@@ -114,7 +118,7 @@ class IngredientSettings(GridLayout):
         self.menu = IngredientMenu(
             repository=self.repository, 
             scrollview=self.ids.menu_scrollview,
-            confirm_callback=lambda: self.reload_position_settings()
+            confirm_callback=self.update_position
         )
         self.ids.menu_scrollview.add_widget(self.menu)
 
@@ -123,6 +127,10 @@ class IngredientSettings(GridLayout):
     #         self.ids.menu_scrollview.remove_widget(self.menu)
 
     #     self.menu = None
+
+    def update_position(self, ingredient_id, position):
+        self.repository.updateIngredient(ingredient_id, jar_pos=position)
+        self.reload_position_settings()
 
     def build_position_settings(self): 
         container = self.ids.container
