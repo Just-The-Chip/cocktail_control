@@ -19,6 +19,8 @@ from repository import DrinkRepository
 from dispenser import Dispenser
 from hardware import EncoderInput
 
+from dispenser import DispenserStatus
+
 class ScrollButton(ToggleButton):
     def __init__(self, **kwargs):
         image_name = kwargs.pop('img') or 'hola.png'
@@ -35,10 +37,15 @@ class DispensingModal(ModalView):
     def __init__(self, **kwargs):
         super(DispensingModal, self).__init__(**kwargs)
 
+class ErrorModal(ModalView):
+    def __init__(self, **kwargs):
+        self.err_msg = kwargs.pop('err_msg')
+        super(ErrorModal, self).__init__(**kwargs)
+
 class DrinkSelector(GridLayout):
     widgetList = []
     currentPos = 0
-    dispensing_modal = None
+    modal = None
 
     def __init__(self, **kwargs):
         super(DrinkSelector, self).__init__(**kwargs)
@@ -119,22 +126,29 @@ class DrinkSelector(GridLayout):
 
     @mainthread
     def open_dispensing_modal(self):
-        self.dismiss_dispensing_modal()
-        self.dispensing_modal = DispensingModal()
-        self.dispensing_modal.open()
+        self.dismiss_modal()
+        self.modal = DispensingModal()
+        self.modal.open()
 
-    def dismiss_dispensing_modal(self):
-        if self.dispensing_modal:
-            self.dispensing_modal.dismiss(force=True)
+    def open_error_modal(self, msg): 
+        self.dismiss_modal()
+        self.modal = ErrorModal(err_msg=msg)
+        self.modal.open()
 
-        self.dispensing_modal = None
+    def dismiss_modal(self):
+        if self.modal:
+            self.modal.dismiss(force=True)
+
+        self.modal = None
 
 
 class DrinkSelectorScreen(Screen):
 
     dispenser = Dispenser(0x04)
-
     drink_selector = None
+
+    dispensing_modal_open = False
+    error_modal_open = False
 
     #drinks = [{'img': './images/shark_cat.jpg', 'name': 'Shark Cat'}, {'img': './images/Batman.jpg', 'name': 'Batman!'}, {'img': './images/squirtle.jpg', 'name': 'Squirtle'}]
 
@@ -144,7 +158,7 @@ class DrinkSelectorScreen(Screen):
         self.setup_dispenser()
         self.setup_encoder()
 
-        self.encoder.setupEncoderEvents(lambda dir: self.select_next(dir), self.dispense_current)
+        self.encoder.setupEncoderEvents(lambda dir: self.select_next(dir), self.handle_encoder_press)
         
         super(DrinkSelectorScreen, self).__init__(**kwargs)
 
@@ -190,18 +204,53 @@ class DrinkSelectorScreen(Screen):
 
     def handle_hotkey(self, key, modifier):
         if modifier == [] and (key == 40 or key == 'enter'):
-            print("dispenssssssss")
+            print("enter key pressed!")
+            self.handle_encoder_press()
+            # if self.error_modal_open:
+            #     self.handle_encoder_press()
+            # else:
+            #     self.dispenser_done(DispenserStatus.CANCEL)
+
+    def handle_encoder_press(self):
+        if self.error_modal_open: 
+            self.allow_selection()
+        elif not self.dispensing_modal_open:
             self.dispense_current()
 
+    def dispenser_done(self, status):
+        if status == DispenserStatus.READY:
+            self.allow_selection()
+            return
+
+        err_msg = "Unknown error. Please consult your local nerd or try again. Status code: " + str(status)
+
+        if status == DispenserStatus.REMOVED:
+            err_msg = "Drink removed from dispensing area!"
+        elif status == DispenserStatus.CANCEL:
+            err_msg = "Drink cancelled. Please check for any empty ingredients."
+
+        self.display_error(err_msg)
+
     def allow_selection(self):
-        self.drink_selector.dismiss_dispensing_modal()
+        self.drink_selector.dismiss_modal()
+        self.dispensing_modal_open = False
+        self.error_modal_open = False
         self.encoder.enableInput()
         # remove dispensing popup
 
     def prevent_selection(self):
         self.drink_selector.open_dispensing_modal()
+        self.dispensing_modal_open = True
+        self.error_modal_open = False
         self.encoder.disableInput()
         # show dispensing popup
+
+    def display_error(self, msg):
+        self.drink_selector.open_error_modal(msg)
+        self.dispensing_modal_open = False
+        self.error_modal_open = True
+        self.encoder.setWarningColor()
+        # show error popup
 
     def select_next(self, dir):
         self.drink_selector.next_widget(dir, callback=lambda: self.highlight_current())
@@ -226,4 +275,4 @@ class DrinkSelectorScreen(Screen):
         recipe = self.repository.getDrinkRecipe(drink_id)
 
         self.prevent_selection()
-        self.dispenser.dispenseDrink(recipe, self.allow_selection)
+        self.dispenser.dispenseDrink(recipe, self.dispenser_done)

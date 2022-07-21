@@ -55,7 +55,7 @@
     size: 250, 40
     text: 'Random Drink'
 
-<ModalView>
+<DispensingModal>
     size_hint: None, None
     auto_dismiss: False
     size: 440, 115
@@ -67,3 +67,29 @@
         allow_stretch: True
         size: 400, 75
 
+<ErrorModal>
+    size_hint: None, None
+    auto_dismiss: False
+    size: 440, 200
+    background_normal: ''
+    padding: 20
+    GridLayout:
+        cols:1
+        width: 400
+        padding: 0
+        spacing: 10
+        
+        Label:
+            id: errorheader
+            text: 'Error'
+            font_size: 40
+            halign: 'center'
+
+        Label:
+            id: errormessage
+            text: root.err_msg + "\n"
+            halign: 'center'
+            font_size: 20
+            text_size: self.width, None
+            height: self.texture_size[1]
+            size_hint_y: None
