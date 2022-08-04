@@ -188,7 +188,7 @@ class Dispenser:
             time.sleep(1)
             
             status = self.getDispenserStatus()
-            wait = status != DispenserStatus.DISPENSING
+            wait = status == DispenserStatus.DISPENSING
 
         print("doing done callback.")
         doneCallback(status)

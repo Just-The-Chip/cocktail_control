@@ -213,7 +213,7 @@ class IngredientRepository :
         if availOnly:
             query += "WHERE (jar_pos IS NOT NULL OR mixer > 0) "
 
-        query += "ORDER BY (jar_pos IS NULL), jar_pos"
+        query += "ORDER BY (jar_pos IS NULL), jar_pos, name"
 
         c.execute(query)
 
