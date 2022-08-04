@@ -1,0 +1,83 @@
+#:kivy 1.10.0
+#:import kivy kivy
+#:import win kivy.core.window
+
+<SettingsScreen>:
+    on_pre_enter: self.setup_ingredient_settings()
+
+<IngredientSettings>:
+    cols: 1
+    GridLayout:
+        cols: 2
+        width: 800
+        padding: 0
+        spacing: 0
+        size_hint: None, 1
+
+        ScrollView:
+            size_hint: None, None
+            size: 400, 480
+            pos_hint: {'center_x': .5, 'center_y': .5}
+            id: scrollview
+
+            GridLayout:
+                cols: 1
+                padding: 10
+                spacing: 5
+                height: self.minimum_height
+                size_hint: None, None
+                do_scroll_x: False
+                id: container
+
+        ScrollView:
+            size_hint: None, None
+            size: 400, 480
+            pos_hint: {'center_x': .5, 'center_y': .5}
+            id: menu_scrollview
+
+            # GridLayout:
+            #     cols: 1
+            #     padding: 10
+            #     spacing: 5
+            #     height: self.minimum_height
+            #     size_hint: None, None
+            #     do_scroll_x: False
+            #     id: menu
+
+<IngredientMenu>
+    cols: 1
+    padding: 10
+    spacing: 5
+    height: self.minimum_height
+    size_hint: None, None
+    do_scroll_x: False
+
+<IngredientMenuItem>
+    # ingredient_name: ""
+    # current_pos: None
+    current_pos_text: " (currently at {})".format(str(self.current_pos)) if self.current_pos is not None else ""
+    size_hint: None, None
+    size: 400, 40
+    text: self.ingredient_name + self.current_pos_text
+    # on_release: self.select_ingredient()
+
+<PositionSetting>
+    cols: 2
+    size_hint: None, None 
+    size: 400, 40
+    pos_hint: {'center_x': .5, 'center_y': .5}
+
+    Label:
+        text: "Position {}".format(str(root.jar_pos))
+        width: 100
+        size_hint_x: None
+
+    ToggleButton:
+        text: root.ingredient_name
+        on_release: root.open_menu()
+        size_hint_y: None
+        size: 300, 40
+        id: toggle_btn
+
+    Widget:
+        on_parent: root.close_menu()

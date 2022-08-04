@@ -20,6 +20,8 @@ class DispenserStatus(IntEnum):
     READING = 5
     DISPENSING = 7
     READY = 3
+    CANCEL = 24
+    REMOVED = 27
 
 class Dispenser:
 
@@ -32,6 +34,7 @@ class Dispenser:
         self.bus = smbus.SMBus(1) # for RPI version 1, use "bus = smbus.SMBufs(0)"
         self.spin = kwargs.get('spin', 10)
         self.dpin = kwargs.get('dpin', 11)
+        self.timeoutPerIng = 40
 
         GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.spin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -175,10 +178,17 @@ class Dispenser:
                 print("ingredient sent---")
         
         print("checking for ready status.")
-        while self.getDispenserStatus() != DispenserStatus.READY:
-            print("still dispensing...")
+
+        timeout = time.time() + (self.timeoutPerIng * len(recipe))
+        print("Drink timeout: " + str(timeout) + "seconds")
+
+        status = DispenserStatus.DISPENSING
+        wait = True
+        while wait and time.time() < timeout:
             time.sleep(1)
-            # do we need to have a timeout?
+            
+            status = self.getDispenserStatus()
+            wait = status == DispenserStatus.DISPENSING
 
         print("doing done callback.")
-        doneCallback()
+        doneCallback(status)

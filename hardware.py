@@ -77,6 +77,9 @@ class EncoderInput:
         self.setColor(0, 0, 1)
         self.inputEnabled = True
 
+    def setWarningColor(self):
+        self.setColor(1, 1, 0)
+
     def handleEncoderPress(self, channel):
         state = self.sampleChannel(self.btn, 0.010) #sample 10 ms
 
