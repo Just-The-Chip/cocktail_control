@@ -1,10 +1,16 @@
 #!/usr/bin/env python
 
-from email.policy import default
 import click
 
 import sys
 import os
+
+# # Replace libraries on windows machine
+# import fake_rpi
+
+# sys.modules['RPi'] = fake_rpi.RPi     # Fake RPi
+# sys.modules['RPi.GPIO'] = fake_rpi.RPi.GPIO # Fake GPIO
+# sys.modules['smbus'] = fake_rpi.smbus # Fake smbus (I2C)
 
 curpath = os.path.dirname(__file__)
 if(curpath not in sys.path):

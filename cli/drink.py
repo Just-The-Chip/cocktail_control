@@ -8,6 +8,13 @@ import sys
 import os
 import json
 
+# # Replace libraries on windows machine
+# import fake_rpi
+
+# sys.modules['RPi'] = fake_rpi.RPi     # Fake RPi
+# sys.modules['RPi.GPIO'] = fake_rpi.RPi.GPIO # Fake GPIO
+# sys.modules['smbus'] = fake_rpi.smbus # Fake smbus (I2C)
+
 curpath = os.path.dirname(__file__)
 if(curpath not in sys.path):
     sys.path.append(curpath)
