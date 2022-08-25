@@ -17,7 +17,8 @@ class DrinkRepository:
         "FROM drinks d "
         "INNER JOIN drink_ingredient di ON d.id = di.drink_id "
         "INNER JOIN ingredients i ON di.ingredient_id = i.id "
-        "GROUP BY d.id, d.name, d.image")
+        "GROUP BY d.id, d.name, d.image "
+        "ORDER BY d.name ASC")
 
         c.execute(query)
 
@@ -46,7 +47,8 @@ class DrinkRepository:
         "INNER JOIN drink_ingredient di ON d.id = di.drink_id "
         "INNER JOIN ingredients i ON di.ingredient_id = i.id "
         "GROUP BY d.id, d.name, d.image "
-        "HAVING COUNT(i.id) = SUM(available)")
+        "HAVING COUNT(i.id) = SUM(available) "
+        "ORDER BY d.name")
 
         c.execute(query)
 
