@@ -47,6 +47,6 @@ def getDispenser(**kwargs):
     single = int(config['Hardware'].get('SwitchSingle'))
     double = int(config['Hardware'].get('SwitchDouble'))
 
-    prime = kwargs.get('prime', config['Prime'])
+    # prime = kwargs.get('prime', config['Prime'])
 
-    return Dispenser(addr, mspoz=mspoz, prime=prime, spin=single, dpin=double)
+    return Dispenser(addr, mspoz=mspoz, spin=single, dpin=double)

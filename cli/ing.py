@@ -161,7 +161,7 @@ def test(jar, ing):
         click.echo("Current size factor: " + str(sizeFactor))
         return
 
-    dispenser.dispenseDrink([recipeIng])
+    dispenser.dispenseDrink([recipeIng], lambda status: click.echo("Dispnese status: "+ str(status)))
 
     click.echo("Test complete for "+ ingredient["name"])
 
