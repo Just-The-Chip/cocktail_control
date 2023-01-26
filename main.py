@@ -2,6 +2,7 @@ from imp import source_from_cache
 from kivy.config import Config
 Config.set('graphics', 'width', 800)
 Config.set('graphics', 'height', 480)
+Config.set('graphics', 'fullscreen', 'auto')
 Config.set('graphics', 'show_cursor', 0)
 
 from kivy.app import App
